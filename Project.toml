@@ -1,0 +1,13 @@
+name = "ParaDwell"
+uuid = "dd29b2ab-529a-4a84-a1f6-d1e8af985875"
+authors = ["petedmccallum"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
