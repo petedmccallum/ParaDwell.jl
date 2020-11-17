@@ -33,10 +33,10 @@ function DIVA(;
     # Merge trace vectors
     traces = vcat(traces...)
 
-    # Layout scale ratio constrained based on medLat
+    # Layout scale ratio constrained based on midLat
     allLat = vcat([trace[:y] for trace in traces]...)
     midLat = (maximum(allLat)+minimum(allLat))/2
-    latLonRatio = cos(medLat*π/180)
+    latLonRatio = cos(midLat*π/180)
     layout = Layout(
         showlegend=false,
         xaxis=attr(zeroline=false,

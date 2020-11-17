@@ -6,7 +6,7 @@ using LightXML, Interact, Blink, Images
 
 include("structs.jl")
 include("Init.jl")
-include("Coastline.jl")
+include("Mapping/Coastline.jl")
 
 
 end
