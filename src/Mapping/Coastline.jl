@@ -64,7 +64,9 @@ function adminLevelTraces(shapeObj,exclShapeBelowLen,territory)
     traces = [scatter(
             x=coordset[1,:][:],
             y=coordset[2,:][:],
-            name=shapeNames,mode="lines",line=attr(width=0.1,color="#444444BB"),fill="tonexty",fillcolor="#58B19F10")
+            name=shapeNames,mode="lines",line=attr(width=0.1,color="#444444BB"),
+            fill="tonexty",fillcolor="#58B19F10",
+            hoverinfo="skip",hovertemplate=nothing)
     for coordset in coordsets]
 
     return traces
