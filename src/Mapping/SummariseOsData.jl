@@ -1,4 +1,4 @@
-function OS_TileSummries()
+function OS_TileSummries(env)
     # Check contents of Ordnance Survey directory
     dirContents = readdir(env.paths[:OS])
 
@@ -29,37 +29,33 @@ function OS_TileSummries()
 
 
     tileRegister_orig = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
-    iChecked = iChecked[findall(tileRefs[iChecked].==setdiff(tileRefs[iChecked],tileRegister_orig.tileRefs))]
+    newTiles = setdiff(tileRefs[iChecked],tileRegister_orig.tileRefs)
+    if !isempty(newTiles)
+        iChecked = iChecked[findall(tileRefs[iChecked].==newTiles)]
 
-    tileRegister_new = DataFrame(
-        :tileRefDirs => join.(dirContents[iChecked],"_"),
-        :tileRefs => tileRefs[iChecked],
-        :eastings_max => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :northings_max => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :eastings_min => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :northings_min => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :northings_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :eastings_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :Lat_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.),
-        :Lon_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.)
-    )
+        tileRegister_new = DataFrame(
+            :tileRefDirs => join.(dirContents[iChecked],"_"),
+            :tileRefs => tileRefs[iChecked],
+            :eastings_max => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :northings_max => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :eastings_min => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :northings_min => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :northings_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :eastings_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :Lat_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.),
+            :Lon_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.)
+        )
 
+        [tileRegister_new[row,[:eastings_max,:northings_max,:eastings_min,:northings_min,:northings_mid,:eastings_mid]] = MidGridRefs(tileRegister_new.tileRefs[row])
+            for row in 1:length(iChecked)]
 
+        [tileRegister_new[row,[:Lat_mid,:Lon_mid]] = OSENtoLLA(tileRegister_new.eastings_mid[row],tileRegister_new.northings_mid[row])
+            for row in 1:length(iChecked)]
 
+        tileRegister = vcat(tileRegister_orig,tileRegister_new)
 
-
-    [tileRegister_new[row,[:eastings_max,:northings_max,:eastings_min,:northings_min,:northings_mid,:eastings_mid]] = MidGridRefs(tileRegister_new.tileRefs[row])
-        for row in 1:length(iChecked)]
-
-
-
-    [tileRegister_new[row,[:Lat_mid,:Lon_mid]] = OSENtoLLA(tileRegister_new.eastings_mid[row],tileRegister_new.northings_mid[row])
-        for row in 1:length(iChecked)]
-
-
-    tileRegister = vcat(tileRegister_orig,tileRegister_new)
-
-    CSV.write(joinpath(env.paths[:projects],".OS_TileRegister.csv"),tileRegister)
+        CSV.write(joinpath(env.paths[:projects],".OS_TileRegister.csv"),tileRegister)
+    end
 end
 
 function MidGridRefs(tile)
