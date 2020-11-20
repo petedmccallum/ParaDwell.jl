@@ -45,7 +45,7 @@ function DIVA(;
     )
 
     # Plot (suppress in application with semi-colon)
-    plt = plot(traces,layout)
+    plt = plot(traces,layout);
 
     return plt
 end

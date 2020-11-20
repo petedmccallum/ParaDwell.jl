@@ -46,7 +46,7 @@ function OS_TileSummries(env)
             :Lon_mid => fill!(Array{Float32}(undef,length(iChecked)),-999.)
         )
 
-        [tileRegister_new[row,[:eastings_max,:northings_max,:eastings_min,:northings_min,:northings_mid,:eastings_mid]] = MidGridRefs(tileRegister_new.tileRefs[row])
+        [tileRegister_new[row,[:eastings_max,:northings_max,:eastings_min,:northings_min,:northings_mid,:eastings_mid]] = MidGridRefs(env,tileRegister_new.tileRefs[row])
             for row in 1:length(iChecked)]
 
         [tileRegister_new[row,[:Lat_mid,:Lon_mid]] = OSENtoLLA(tileRegister_new.eastings_mid[row],tileRegister_new.northings_mid[row])
@@ -58,15 +58,17 @@ function OS_TileSummries(env)
     end
 end
 
-function MidGridRefs(tile)
+function MidGridRefs(env,tile)
     gml = ProcessGMLs(env.paths[:OS],tile)
 
-    eastings_max = maximum(vcat(vcat(gml.summary.eastings...)...))
-    northings_max = maximum(vcat(vcat(gml.summary.northings...)...))
-    eastings_min = minimum(vcat(vcat(gml.summary.eastings...)...))
-    northings_min = minimum(vcat(vcat(gml.summary.northings...)...))
-    northings_mid = (northings_max+northings_min)/2
-    eastings_mid = (eastings_max+eastings_min)/2
+    eastings_mid = floor(mean(vcat(vcat(gml.summary.eastings...)...))/5000)*5000 + 2500
+    northings_mid = floor(mean(vcat(vcat(gml.summary.northings...)...))/5000)*5000 + 2500
+
+    eastings_min = eastings_mid - 2500
+    northings_min = northings_mid - 2500
+
+    eastings_max = eastings_mid + 2500
+    northings_max = northings_mid + 2500
 
     return eastings_max,northings_max,eastings_min,northings_min,northings_mid,eastings_mid
 end
