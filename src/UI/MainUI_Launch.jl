@@ -108,6 +108,7 @@ function LaunchMainUI(env)
 
 
     layout = Layout(
+        showlegend=false,
         xaxis=attr(zeroline=false,
             scaleanchor="y", scaleratio=1),
         hovermode="closest"

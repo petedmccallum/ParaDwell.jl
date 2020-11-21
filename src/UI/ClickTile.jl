@@ -1,10 +1,25 @@
 include("MainUI_Launch.jl")
 
-function LayerTrace(gml,target;colour::String="#aaaaaa")
+function LayerTrace(gml,target;colour::String="#aaaaaa",CropOutOfBounds::Bool=false)
     iKeep = findall([length(findall(descr.==target))>0 for descr in gml.summary.descr])
 
-    xs = vcat([vcat(pts,NaN) for pts in vcat(gml.summary.eastings[iKeep]...)]...)
-    ys = vcat([vcat(pts,NaN) for pts in vcat(gml.summary.northings[iKeep]...)]...)
+    xs = vcat(gml.summary.eastings[iKeep]...)
+    ys = vcat(gml.summary.northings[iKeep]...)
+
+    if CropOutOfBounds == true
+        ob_up = findall([sum(y.>tileRegister.northings_max[iTile])==length(y) for y in ys])
+        ob_down = findall([sum(y.<tileRegister.northings_min[iTile])==length(y) for y in ys])
+        ob_left = findall([sum(x.<tileRegister.eastings_min[iTile])==length(x) for x in xs])
+        ob_right = findall([sum(x.>tileRegister.eastings_max[iTile])==length(x) for x in xs])
+
+        iOB = unique(vcat(ob_up,ob_down,ob_left,ob_right))
+        xs = xs[Not(iOB)]
+        ys = ys[Not(iOB)]
+    end
+
+    xs = vcat([vcat(pts,NaN) for pts in xs]...)
+    ys = vcat([vcat(pts,NaN) for pts in ys]...)
+
     trace = scatter(x=xs,y=ys,name=gml.tile,mode="lines",line=attr(width=0.2,color=colour),hoverinfo="skip",hovertemplate=nothing)
     return trace
 end
@@ -39,11 +54,11 @@ on(plt_nationwide["click"]) do dat
     # push!(traces,LayerTrace(gml,"General Surface",colour="#aaaaaa"))
     # push!(traces,LayerTrace(gml,"Path",colour="#aaaaaa"))
     push!(traces,LayerTrace(gml,"Building",colour="#0984e3"))
-    push!(traces,LayerTrace(gml,"Road Or Track",colour="#ff9f43"))
+    push!(traces,LayerTrace(gml,"Road Or Track",colour="#ff9f43",CropOutOfBounds=true))
     # push!(traces,LayerTrace(gml,"Roadside",colour="#aaaaaa"))
     # push!(traces,LayerTrace(gml,"Structure",colour="#aaaaaa"))
     # push!(traces,LayerTrace(gml,"Landform",colour="#aaaaaa"))
-    push!(traces,LayerTrace(gml,"Natural Environment",colour="#aaaaaa"))
+    push!(traces,LayerTrace(gml,"Natural Environment",colour="#aaaaaa",CropOutOfBounds=false))
     # push!(traces,LayerTrace(gml,"Tidal Water",colour="#aaaaaa"))
     # push!(traces,LayerTrace(gml,"Inland Water",colour="#aaaaaa"))
     # push!(traces,LayerTrace(gml,"Unclassified",colour="#aaaaaa"))
