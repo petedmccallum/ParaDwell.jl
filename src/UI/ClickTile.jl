@@ -49,7 +49,7 @@ function Launch(env,project)
         iTile  = intersect(findall(tileRegister.Lon_mid.==X),findall(tileRegister.Lat_mid.==Y))[1]
 
         # "loading" pop-up
-        w_popup = Window(Dict(:width=>500,:height=>150))
+        w_popup = Window(Dict(:title=>"Loading...",:width=>500,:height=>150))
         body!(w_popup,"Loading $(tileRegister.tileRefs[iTile]) ...")
         sleep(0.1)
 

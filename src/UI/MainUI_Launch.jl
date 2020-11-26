@@ -120,7 +120,7 @@ function LaunchMainUI(env)
 
 
 
-    ui.mainWindow = Window(async=false,Dict("width"=>2100,"height"=>1200));
+    ui.mainWindow = Window(async=false,Dict(:title=>"ParaDwell","width"=>2100,"height"=>1200,:x=>0,:y=>0));
     body!(ui.mainWindow,
         CSSUtil.height(600px,hbox(
         ui.panelLeft,
@@ -147,7 +147,7 @@ function LaunchMainUI(env)
     tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
 
 
-    plt_nationwide = ParaDwell.DIVA();
+    plt_nationwide = ParaDwell.DIVA(adminLevel=2,exclShapeBelowLen=20);
     traces=scatter(
         name="OS 5km Tile",
         text=tileRegister.tileRefs,
@@ -159,7 +159,7 @@ function LaunchMainUI(env)
 
     addtraces!(plt_nationwide,traces)
 
-    w_nationwide = Window(Dict(:width=>1200,:height=>1200))
+    w_nationwide = Window(Dict(:title=>"Macro-map",:width=>500,:height=>700,:x=>1430,:y=>360))
     body!(w_nationwide,plt_nationwide)
 
     ##########################################
@@ -167,3 +167,4 @@ function LaunchMainUI(env)
 end
 
 # LaunchMainUI(env);
+Launch(env,project)
