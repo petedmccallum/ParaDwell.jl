@@ -60,7 +60,11 @@ function Launch(env,project)
 
         # Load data for new tile
         gml = ParaDwell.ProcessGMLs(env.paths[:OS],tileRegister.tileRefs[iTile])
-        push!(project.dat,"gml"=>gml)
+        if !haskey(project.dat,"gml")
+            push!(project.dat,"gml"=>[gml])
+        else
+            push!(project.dat["gml"],gml)
+        end
 
         # Plot layers
         traces = []
