@@ -109,10 +109,10 @@ function LaunchMainUI(env)
 
     layout = Layout(
         showlegend=false,
-        xaxis=attr(zeroline=false,
-            scaleanchor="y", scaleratio=1),
-        yaxis=attr(zeroline=false),
-        hovermode="closest"
+        xaxis=attr(title="Easting",zeroline=false,tickformat=".0f",scaleanchor="y", scaleratio=1),
+        yaxis=attr(title="Northing",zeroline=false,tickformat=".0d"),
+        hovermode="closest",
+        margin=attr(l=100,b=60)
     )
 
 
