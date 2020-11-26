@@ -5,7 +5,6 @@ end
 mutable struct Project
     name::String
     paths::Dict
-    setViews::DataFrame
     dat::Dict{String,Any}
     Project() = new()
 end
@@ -91,17 +90,14 @@ mutable struct UI
     title::HTML{String}
     subtitle::HTML{String}
     titlePane::Node{WebIO.DOM}
-    pathLogos::String
     logo1::Array{RGBA{Normed{UInt8,8}},2}
-    kmPerDegLat::Float64
     mainWindow::Window
     logoPanel::Node{WebIO.DOM}
     subPanelLeft1::Node{WebIO.DOM}
     panelLeft::Node{WebIO.DOM}
     panelRight::Node{WebIO.DOM}
     p0::PlotlyJS.SyncPlot
-    ns_bounds::Tuple{Float64,Float64}
-    previousView::String
+    macro_point::Tuple{Float64,Float64}
     wgt::Wgt
     UI() = new()
 end

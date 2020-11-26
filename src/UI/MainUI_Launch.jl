@@ -111,6 +111,7 @@ function LaunchMainUI(env)
         showlegend=false,
         xaxis=attr(zeroline=false,
             scaleanchor="y", scaleratio=1),
+        yaxis=attr(zeroline=false),
         hovermode="closest"
     )
 
@@ -162,7 +163,7 @@ function LaunchMainUI(env)
     body!(w_nationwide,plt_nationwide)
 
     ##########################################
-    return plt_nationwide
+    return ui, plt_nationwide
 end
 
 # LaunchMainUI(env);

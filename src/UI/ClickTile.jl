@@ -34,63 +34,60 @@ function LayerTrace(gml,target,tileRegister;colour::String="#aaaaaa",CropOutOfBo
     return trace
 end
 
-plt_nationwide = LaunchMainUI(env);
 
-on(plt_nationwide["click"]) do dat
+function Launch(env,project)
+    ui, plt_nationwide = LaunchMainUI(env);
 
-    # Determine selected point
-    X = dat["points"][1]["x"]
-    Y = dat["points"][1]["y"]
+    on(plt_nationwide["click"]) do dat
 
-    # Find selected tile
-    tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
-    iTile  = intersect(findall(tileRegister.Lon_mid.==X),findall(tileRegister.Lat_mid.==Y))[1]
+        # Determine selected point
+        X = dat["points"][1]["x"]
+        Y = dat["points"][1]["y"]
 
-    # "loading" pop-up
-    w_popup = Window(Dict(:width=>500,:height=>150))
-    body!(w_popup,"Loading $(tileRegister.tileRefs[iTile]) ...")
-    sleep(0.1)
+        # Find selected tile
+        tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
+        iTile  = intersect(findall(tileRegister.Lon_mid.==X),findall(tileRegister.Lat_mid.==Y))[1]
 
-    # Clear blank initialising trace, optionally clear all traces
-    iRm = findall([tr[:name] for tr in ui.p0.plot.data].=="blank")
-    [deletetraces!(ui.p0,i) for i in iRm]
-    # [deletetraces!(ui.p0,i) for i in length(ui.p0.plot.data):-1:1]
+        # "loading" pop-up
+        w_popup = Window(Dict(:width=>500,:height=>150))
+        body!(w_popup,"Loading $(tileRegister.tileRefs[iTile]) ...")
+        sleep(0.1)
 
-    # Load data for new tile
-    gml = ParaDwell.ProcessGMLs(env.paths[:OS],tileRegister.tileRefs[iTile])
+        # Clear blank initialising trace, optionally clear all traces
+        iRm = findall([tr[:name] for tr in ui.p0.plot.data].=="blank")
+        [deletetraces!(ui.p0,i) for i in iRm]
+        # [deletetraces!(ui.p0,i) for i in length(ui.p0.plot.data):-1:1]
 
-    # Plot layers
-    traces = []
-    # push!(traces,LayerTrace(gml,"General Surface",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Path",tileRegister[iTile,:],colour="#aaaaaa"))
-    push!(traces,LayerTrace(gml,"Building",tileRegister[iTile,:],colour="#0984e3"))
-    push!(traces,LayerTrace(gml,"Road Or Track",tileRegister[iTile,:],colour="#ff9f43",CropOutOfBounds=true))
-    # push!(traces,LayerTrace(gml,"Roadside",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Structure",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Landform",tileRegister[iTile,:],colour="#aaaaaa"))
-    push!(traces,LayerTrace(gml,"Natural Environment",tileRegister[iTile,:],colour="#aaaaaa",CropOutOfBounds=true))
-    # push!(traces,LayerTrace(gml,"Tidal Water",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Inland Water",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Unclassified",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Historic Interest",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Network Or Polygon Closing Geometry",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"General Feature",tileRegister[iTile,:],colour="#aaaaaa"))
-    # push!(traces,LayerTrace(gml,"Terrain And Height",tileRegister[iTile,:],colour="#aaaaaa"))
+        # Load data for new tile
+        gml = ParaDwell.ProcessGMLs(env.paths[:OS],tileRegister.tileRefs[iTile])
+        push!(project.dat,"gml"=>gml)
 
-    # Plot tile boundary
-    push!(traces,scatter(
-        x=[tileRegister.eastings_min[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_min[iTile];tileRegister.eastings_min[iTile]],
-        y=[tileRegister.northings_min[iTile];tileRegister.northings_min[iTile];tileRegister.northings_max[iTile];tileRegister.northings_max[iTile];tileRegister.northings_min[iTile]],
-        mode="lines",
-        line_color="#333333",
-        name=tileRegister.tileRefs[iTile]
-    ))
+        # Plot layers
+        traces = []
+        push!(traces,LayerTrace(gml,"Building",tileRegister[iTile,:],colour="#0984e3"))
+        push!(traces,LayerTrace(gml,"Road Or Track",tileRegister[iTile,:],colour="#ff9f43",CropOutOfBounds=true))
+        push!(traces,LayerTrace(gml,"Natural Environment",tileRegister[iTile,:],colour="#aaaaaa",CropOutOfBounds=true))
 
-    # Add all new traces
-    [addtraces!(ui.p0,trace) for trace in traces]
+        # Plot tile boundary
+        push!(traces,scatter(
+            x=[tileRegister.eastings_min[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_min[iTile];tileRegister.eastings_min[iTile]],
+            y=[tileRegister.northings_min[iTile];tileRegister.northings_min[iTile];tileRegister.northings_max[iTile];tileRegister.northings_max[iTile];tileRegister.northings_min[iTile]],
+            mode="lines",
+            line_color="#333333",
+            name=tileRegister.tileRefs[iTile]
+        ))
 
-    sleep(0.1)
-    close(w_popup)
+        # Add all new traces
+        [addtraces!(ui.p0,trace) for trace in traces]
+        sleep(0.1)
+        close(w_popup)
+
+
+    end
     return gml
-
 end
+
+
+project = ParaDwell.Project()
+project.dat = Dict()
+Launch(env,project)
