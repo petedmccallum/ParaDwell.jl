@@ -99,10 +99,7 @@ function Launch(env,project)
         addtraces!(plt_nationwide,traces_boundary_macroLLA) # Macro-map UI
         sleep(0.1)
         close(w_popup)
-
-
     end
-    return gml
 end
 
 

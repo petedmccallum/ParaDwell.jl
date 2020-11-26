@@ -3,6 +3,52 @@ using CSSUtil, Interact, Blink, CSV, DataFrames, PlotlyJS
 global env = ParaDwell.loadPaths()
 ParaDwell.OS_TileSummries(env)
 
+function WidgetBlock(widgets;name::String="",title::String="",subtitle::String="",ddList::OrderedDict)
+    push!(widgets["buttons"], name=> button(title,
+        style=Dict(:color => "white",:backgroundColor => "#dddddd",:width => "220px",:height => "34px",:fontSize => "0.9em")))
+    subtitle = HTML(string("<div style='font-size:14px'><em>$(subtitle)</em></div>"))
+    push!(widgets["toggles"], name => toggle(""));
+    push!(widgets["dropdowns"], name => dropdown(ddList));
+    widgets["dropdowns"][name].scope.dom.props[:style] = Dict(:width => "170px",:height => "20px",:fontSize => "0.7em");
+    widgets["toggles"][name].scope.dom.props[:style] = Dict(:height => "18px");
+    if name == "Census"
+        push!(widgets["toggles"], "$(name)_2" => toggle(""));
+        toggle_2_text = HTML(string("<div style='font-size:12px'>OA Boundaries</div>"))
+        widgets["toggles"]["$(name)_2"].scope.dom.props[:style] = Dict(:height => "18px",:fontSize=>"0.7em");
+        toggles = vbox(vskip(2px),hbox(widgets["toggles"]["$(name)_2"],toggle_2_text),
+                  hbox(vbox(vskip(2px),widgets["toggles"][name]),vbox(widgets["dropdowns"][name]
+        )))
+    elseif name == "OS"
+        push!(widgets["toggles"], "$(name)_2" => toggle(""));
+        push!(widgets["toggles"], "$(name)_3" => toggle(""));
+        push!(widgets["toggles"], "$(name)_4" => toggle(""));
+        toggle_2_text = HTML(string("<div style='font-size:12px'>Buildings</div>"))
+        toggle_3_text = HTML(string("<div style='font-size:12px'>Roads/Paths</div>"))
+        toggle_4_text = HTML(string("<div style='font-size:12px'>Natural Features</div>"))
+        widgets["toggles"]["$(name)_2"].scope.dom.props[:style] = Dict(:height => "18px",:fontSize=>"0.7em");
+        widgets["toggles"]["$(name)_3"].scope.dom.props[:style] = Dict(:height => "18px",:fontSize=>"0.7em");
+        widgets["toggles"]["$(name)_4"].scope.dom.props[:style] = Dict(:height => "18px",:fontSize=>"0.7em");
+        toggles = vbox(vskip(2px),
+                hbox(widgets["toggles"]["$(name)_2"],toggle_2_text),
+                hbox(widgets["toggles"]["$(name)_3"],toggle_3_text),
+                hbox(widgets["toggles"]["$(name)_4"],toggle_4_text)
+        )
+    else
+        toggles = hbox(vbox(vskip(2px),widgets["toggles"][name]),vbox(widgets["dropdowns"][name]))
+    end
+
+    push!(widgets["Blocks"], name =>
+        CSSUtil.vbox(
+            hbox(widgets["buttons"][name]),
+            vskip(2px),
+            subtitle,
+            vskip(4px),
+            toggles,
+            vskip(20px),
+        )
+    )
+    return widgets
+end
 
 function LaunchMainUI(env)
 
@@ -13,60 +59,37 @@ function LaunchMainUI(env)
 
 
     ## BUILD WIDGITS
-    global wgt = ParaDwell.Wgt(ParaDwell.Toggle(),ParaDwell.Dropdown(),ParaDwell.Radio(),ParaDwell.Button(),ParaDwell.Check(),ParaDwell.Spinbox());
-    wgt.dropdown.markerfield = dropdown(OrderedDict("(blank)" => "Value 0", "IMD" => "Value 1", "ACORN type" => "Value 2", "Bldg. density" => "Value 3", "Pop. density" => "Value 4", "Building type" => "Value 5", "SSEN Zone" => "Value 6"));
-    wgt.toggle.bldgs = toggle(label = "Show buildings");
-    wgt.toggle.roads = toggle(label = "Show roadways");
-    wgt.toggle.coast = toggle(label = "Show coastline");
-    wgt.toggle.postcodes = toggle(label = "Show postcodes"); wgt.toggle.postcodes[] = true
-    # wgt.dropdown.zone = dropdown(project.setViews.SetView); wgt.dropdown.zone[]=project.name
-    wgt.button.clr = button(HTML(string("<div style='font-size:14px'>Clear viewports</div>")));
-    wgt_tog_diva = toggle(label = "Basemap map"); wgt_tog_diva[]=true
-    wgt_tog_datazone = toggle(label = "Datazone map");
-    wgt.check.census = checkbox("Census");
-    wgt.check.epc = checkbox("EPC");
-    wgt.check.homeAnalytics  = checkbox("Home Analytics");
-    wgt.check.acorn = checkbox("Acorn");
-
-
-
-    ## FORMAT WIDGETS
-    wgt.toggle.bldgs.scope.dom.props[:style] = Dict("height"=>18px);
-    wgt.toggle.roads.scope.dom.props[:style] = Dict("height"=>18px);
-    wgt.toggle.coast.scope.dom.props[:style] = Dict("height"=>18px);
-    wgt_tog_diva.scope.dom.props[:style] = Dict("height"=>18px);
-    wgt_tog_datazone.scope.dom.props[:style] = Dict("height"=>18px);
-    wgt.button.clr.scope.dom.props[:style] = Dict("height"=>36px);
+    widgets = Dict("buttons"=>Dict(),"toggles"=>Dict(),"dropdowns"=>Dict(),"Blocks"=>Dict())
+    widgets = WidgetBlock(widgets;name="OS",title="Ordnance Survey",subtitle="",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="Census",title="Census 2011",subtitle="By Output Area",ddList=OrderedDict("(blank)             " => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="HomeAnalytics",title="Home Analytics",subtitle="By Dwelling (all)",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="EPC",title="EPC",subtitle="By Dwelling (partial)",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="IMD",title="Deprivation Indicies",subtitle="By LSOA",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="Acorn",title="Acorn (CACI)",subtitle="By Dwelling",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="Census",title="Census 2011",subtitle="By Output Area",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
+    widgets = WidgetBlock(widgets;name="Archetypes",title="Archetypes",subtitle="By Dwelling",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
 
 
     ## LAUNCH ELECTRON
-    ui.subPanelLeft1 = CSSUtil.width(200px,vbox(
-        CSSUtil.hline(),
-        vskip(20px),
-        wgt_tog_diva,
-        wgt_tog_datazone,
-        CSSUtil.hline(),
-        vskip(20px),
-        wgt.toggle.postcodes,
-        wgt.dropdown.markerfield,
+    ui.subPanelLeft1 = CSSUtil.width(250px,
+        vbox(
+        widgets["Blocks"]["OS"],
+        widgets["Blocks"]["Census"],
+        widgets["Blocks"]["HomeAnalytics"],
+        widgets["Blocks"]["EPC"],
+        widgets["Blocks"]["Acorn"],
+        widgets["Blocks"]["IMD"],
         vskip(10px),
-        wgt.toggle.bldgs,
-        wgt.toggle.roads,
-        wgt.toggle.coast,
         CSSUtil.hline(),
-        vskip(20px),
-        HTML(string("<div style='font-size:16px'><b><u>Data links:</u></b></div>")),#vskip(10px),
-        vbox(wgt.check.census),
-        vbox(wgt.check.homeAnalytics),
-        vbox(wgt.check.epc),
-        vskip(-10px),
-        wgt.check.acorn,
-        CSSUtil.hline()
-    ));
-    ui.panelLeft = vbox(CSSUtil.height(650px,vbox(ui.titlePane,"", vskip(30px), hbox(hskip(20px), ui.subPanelLeft1))));
+        vskip(10px),
+        widgets["Blocks"]["Archetypes"],
+        )
+    );
+    ui.panelLeft = vbox(CSSUtil.height(1000px,vbox(ui.titlePane,vskip(20px),CSSUtil.hline(), vskip(30px), hbox(hskip(20px), ui.subPanelLeft1))));
 
 
     ## CREATE WIDGETS FOR RHS PANEL
+    global wgt = ParaDwell.Wgt(ParaDwell.Toggle(),ParaDwell.Dropdown(),ParaDwell.Radio(),ParaDwell.Button(),ParaDwell.Check(),ParaDwell.Spinbox());
     wgt.spinbox.dimensionalRounding = spinbox(1:1:5,value=2);
     wgt.spinbox.maxPlanDepth = spinbox(7:1:15,value=12);
     wgt.dropdown.orient = dropdown(["(ignore)", "nearest 180°", "nearest 90°", "nearest 45°", "nearest 22.5°"]);
@@ -122,19 +145,12 @@ function LaunchMainUI(env)
 
     ui.mainWindow = Window(async=false,Dict(:title=>"ParaDwell","width"=>2100,"height"=>1200,:x=>0,:y=>0));
     body!(ui.mainWindow,
-        CSSUtil.height(600px,hbox(
+        CSSUtil.height(1000px,hbox(
         ui.panelLeft,
         vskip(2em),
         CSSUtil.vline(),
-        vskip(2em),CSSUtil.width(1400px,vbox(
+        vskip(2em),CSSUtil.width(1350px,vbox(
             vskip(2em),
-            hbox(
-                hskip(2em),
-                "Set view:",
-                hskip(2em),
-                # wgt.dropdown.zone,
-                hskip(2em),
-                wgt.button.clr),
             ui.p0)),
         ui.panelRight)));
 
