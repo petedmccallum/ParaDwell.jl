@@ -147,7 +147,8 @@ function LaunchMainUI(env)
     tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
 
 
-    plt_nationwide = ParaDwell.DIVA(adminLevel=2,exclShapeBelowLen=20);
+    # plt_nationwide = ParaDwell.DIVA(adminLevel=2,exclShapeBelowLen=20);
+    plt_nationwide = ParaDwell.DIVA(adminLevel=0,exclShapeBelowLen=200);
     traces=scatter(
         name="OS 5km Tile",
         text=tileRegister.tileRefs,

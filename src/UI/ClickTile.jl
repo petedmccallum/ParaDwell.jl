@@ -73,16 +73,30 @@ function Launch(env,project)
         push!(traces,LayerTrace(gml,"Natural Environment",tileRegister[iTile,:],colour="#aaaaaa",CropOutOfBounds=true))
 
         # Plot tile boundary
+        x_boundary_OSEN = [tileRegister.eastings_min[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_min[iTile];tileRegister.eastings_min[iTile]]
+        y_boundary_OSEN = [tileRegister.northings_min[iTile];tileRegister.northings_min[iTile];tileRegister.northings_max[iTile];tileRegister.northings_max[iTile];tileRegister.northings_min[iTile]]
+        tmp = [ParaDwell.OSENtoLLA(x_boundary_OSEN[i],y_boundary_OSEN[i]) for i in 1:length(y_boundary_OSEN)]
+        x_boundary_LLA = [i[2] for i in tmp]
+        y_boundary_LLA = [i[1] for i in tmp]
         push!(traces,scatter(
-            x=[tileRegister.eastings_min[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_min[iTile];tileRegister.eastings_min[iTile]],
-            y=[tileRegister.northings_min[iTile];tileRegister.northings_min[iTile];tileRegister.northings_max[iTile];tileRegister.northings_max[iTile];tileRegister.northings_min[iTile]],
+            x=x_boundary_OSEN,
+            y=y_boundary_OSEN,
             mode="lines",
             line_color="#333333",
-            name=tileRegister.tileRefs[iTile]
+            name=tileRegister.tileRefs[iTile],
+            hoverinfo="skip",hovertemplate=nothing
         ))
-
+        traces_boundary_macroLLA = scatter(
+            x=x_boundary_LLA,
+            y=y_boundary_LLA,
+            mode="lines",
+            line_color="#333333",
+            name=tileRegister.tileRefs[iTile],
+            hoverinfo="skip",hovertemplate=nothing
+        )
         # Add all new traces
-        [addtraces!(ui.p0,trace) for trace in traces]
+        [addtraces!(ui.p0,trace) for trace in traces] # Main UI
+        addtraces!(plt_nationwide,traces_boundary_macroLLA) # Macro-map UI
         sleep(0.1)
         close(w_popup)
 
