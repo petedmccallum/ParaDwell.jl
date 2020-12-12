@@ -28,7 +28,7 @@ function OS_TileSummries(env)
     )
 
 
-    tileRegister_orig = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
+    tileRegister_orig = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv"), DataFrame)  
     newTiles = setdiff(tileRefs[iChecked],tileRegister_orig.tileRefs)
     if !isempty(newTiles)
         iChecked = iChecked[findall(tileRefs[iChecked].==newTiles)]

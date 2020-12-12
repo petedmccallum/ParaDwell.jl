@@ -160,7 +160,7 @@ function LaunchMainUI(env)
     ParaDwell.OS_TileSummries(env)
 
 
-    tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
+    tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv"), DataFrame)
 
 
     # plt_nationwide = ParaDwell.DIVA(adminLevel=2,exclShapeBelowLen=20);
@@ -184,4 +184,4 @@ function LaunchMainUI(env)
 end
 
 # LaunchMainUI(env);
-Launch(env,project)
+# Launch(env,project)

@@ -45,7 +45,7 @@ function Launch(env,project)
         Y = dat["points"][1]["y"]
 
         # Find selected tile
-        tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv")) |> DataFrame
+        tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv"), DataFrame)
         iTile  = intersect(findall(tileRegister.Lon_mid.==X),findall(tileRegister.Lat_mid.==Y))[1]
 
         # "loading" pop-up
