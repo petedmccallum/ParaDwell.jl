@@ -15,9 +15,9 @@ function BHAdata(pth_gml::String)
     df_headers = DataFrame(load(joinpath(pth_bha_docs,"BHA_Header.csv"),header_exists=false))
     df = DataFrame(load(joinpath(pth_bha,fname),header_exists=false))
 
-    colnames = @time [Symbol(str) for str in df_headers[1,:]]
+    colnames = [Symbol(str) for str in df_headers[1,:]]
 
-    names!(df,colnames)
+    rename!(df,colnames)
 
     df.OS_TOPO_TOID = parse.(Int64,replace.(df.OS_TOPO_TOID,"osgb"=>""))
 
