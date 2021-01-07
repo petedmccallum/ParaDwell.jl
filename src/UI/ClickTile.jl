@@ -1,7 +1,11 @@
 include("MainUI_Launch.jl")
 
-function LayerTrace(gml,target,tileRegister;colour::String="#aaaaaa",CropOutOfBounds::Bool=false)
+function LayerTrace(gml,target,tileRegister;omitThemes::Array=[],colour::String="#aaaaaa",CropOutOfBounds::Bool=false)
     iKeep = findall([length(findall(descr.==target))>0 for descr in gml.summary.descr])
+    if !isempty(omitThemes)
+        iKeep2 = vcat([findall([length(findall(theme.==omitTheme))==0 for theme in gml.summary.theme]) for omitTheme in omitThemes]...)
+        iKeep = intersect(iKeep,iKeep2)
+    end
 
     xs = vcat(gml.summary.eastings[iKeep]...)
     ys = vcat(gml.summary.northings[iKeep]...)
@@ -68,9 +72,9 @@ function Launch(env,project)
 
         # Plot layers
         traces = []
-        push!(traces,LayerTrace(gml,"Building",tileRegister[iTile,:],colour="#0984e3"))
-        push!(traces,LayerTrace(gml,"Road Or Track",tileRegister[iTile,:],colour="#ff9f43",CropOutOfBounds=true))
-        push!(traces,LayerTrace(gml,"Natural Environment",tileRegister[iTile,:],colour="#aaaaaa",CropOutOfBounds=true))
+        push!(traces,LayerTrace(gml,"Building",tileRegister[iTile,:];omitThemes=["Land"],colour="#1e3799"))
+        push!(traces,LayerTrace(gml,"Road Or Track",tileRegister[iTile,:];colour="#ff9f43",CropOutOfBounds=true))
+        push!(traces,LayerTrace(gml,"Natural Environment",tileRegister[iTile,:];colour="#aaaaaa",CropOutOfBounds=true))
 
         # Plot tile boundary
         x_boundary_OSEN = [tileRegister.eastings_min[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_max[iTile];tileRegister.eastings_min[iTile];tileRegister.eastings_min[iTile]]
@@ -82,7 +86,7 @@ function Launch(env,project)
             x=x_boundary_OSEN,
             y=y_boundary_OSEN,
             mode="lines",
-            line_color="#333333",
+            line=attr(color="#aaaaaaaa",width=1),
             name=tileRegister.tileRefs[iTile],
             hoverinfo="skip",hovertemplate=nothing
         ))
@@ -90,7 +94,7 @@ function Launch(env,project)
             x=x_boundary_LLA,
             y=y_boundary_LLA,
             mode="lines",
-            line_color="#333333",
+            line=attr(color="#aaaaaaaa",width=1),
             name=tileRegister.tileRefs[iTile],
             hoverinfo="skip",hovertemplate=nothing
         )

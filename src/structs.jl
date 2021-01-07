@@ -4,8 +4,8 @@ end
 
 mutable struct Project
     name::String
-    paths::Dict
     dat::Dict{String,Any}
+    indices::Dict
     Project() = new()
 end
 

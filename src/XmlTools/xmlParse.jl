@@ -45,9 +45,12 @@ function contentSummary(features,pth)
 
     coordStrings = ExtractFeatures(features,children,"<gml:coordinates>")
 
+    # Extract eastings/northings (Float64 necessary here for coord accuracy,
+    # Float32 introduced RayTracing errors. Could make eastings/northings with
+    # reference to local tile for computations, Float32 for plotting. #CUDA)
     coordStrings = map(coordString->split.(coordString,r"[, ]"),coordStrings)
-    eastings = map(featCoordSets->map(featCoordSet->parse.(Float32,featCoordSet[1:2:end]),featCoordSets),coordStrings)
-    northings = map(featCoordSets->map(featCoordSet->parse.(Float32,featCoordSet[2:2:end]),featCoordSets),coordStrings)
+    eastings = map(featCoordSets->map(featCoordSet->parse.(Float64,featCoordSet[1:2:end]),featCoordSets),coordStrings)
+    northings = map(featCoordSets->map(featCoordSet->parse.(Float64,featCoordSet[2:2:end]),featCoordSets),coordStrings)
 
     # Load Building Height Attribute data
     bha = BHAdata(pth)
@@ -63,7 +66,7 @@ function contentSummary(features,pth)
     global L = size(features,1)
     TileRef = fill!(Array{Union{Missing,String}}(undef,L),missing)
     for x = [:AbsHMin,:AbsH2,:AbsHMax,:RelH2,:RelHMax]
-        @eval $x = fill!(Array{Union{Missing,Float32}}(undef,L),missing)
+        @eval $x = fill!(Array{Union{Missing,Float64}}(undef,L),missing)
     end
 
     # Fill `bha` data
@@ -78,8 +81,8 @@ function contentSummary(features,pth)
         theme = ExtractFeatures(features,children,"<osgb:theme>"),
         osgb = osgb,
         descr = ExtractFeatures(features,children,"<osgb:descriptiveGroup>"),
-        areaOS = ExtractFeatures(features,children,"<osgb:calculatedAreaValue>";T=Float32),
-        alt = ExtractFeatures(features,children,"<osgb:physicalLevel>";T=Float32),
+        areaOS = ExtractFeatures(features,children,"<osgb:calculatedAreaValue>";T=Float64),
+        alt = ExtractFeatures(features,children,"<osgb:physicalLevel>";T=Float64),
         logDate = ExtractFeatures(features,children,"<osgb:changeDate>"),
         logChng = ExtractFeatures(features,children,"<osgb:reasonForChange>"),
         eastings = eastings,

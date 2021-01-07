@@ -24,4 +24,5 @@ docs/site/
 Manifest.toml
 
 scripts/*
-*_testing.jl
+*_testing*
+*_legacy*
