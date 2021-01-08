@@ -5,7 +5,7 @@ end
 mutable struct Project
     name::String
     dat::Dict{String,Any}
-    indices::Dict
+    tileRegister::DataFrame
     Project() = new()
 end
 
@@ -88,15 +88,13 @@ end
 
 mutable struct UI
     title::HTML{String}
-    subtitle::HTML{String}
     titlePane::Node{WebIO.DOM}
-    logo1::Array{RGBA{Normed{UInt8,8}},2}
     mainWindow::Window
-    logoPanel::Node{WebIO.DOM}
     subPanelLeft1::Node{WebIO.DOM}
     panelLeft::Node{WebIO.DOM}
     panelRight::Node{WebIO.DOM}
     p0::PlotlyJS.SyncPlot
+    plt_macro::PlotlyJS.SyncPlot
     macro_point::Tuple{Float64,Float64}
     wgt::Wgt
     UI() = new()

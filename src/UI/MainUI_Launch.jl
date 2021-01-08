@@ -153,28 +153,24 @@ function LaunchMainUI(env)
     # sleep(1)
 
     ##########################################
-    ParaDwell.OS_TileSummries(env)
 
 
-    tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv"), DataFrame)
-
-
-    # plt_nationwide = ParaDwell.DIVA(adminLevel=2,exclShapeBelowLen=20);
-    plt_nationwide = ParaDwell.DIVA(adminLevel=0,exclShapeBelowLen=200);
+    # ui.plt_macro = ParaDwell.DIVA(adminLevel=2,exclShapeBelowLen=20);
+    ui.plt_macro = ParaDwell.DIVA(adminLevel=0,exclShapeBelowLen=200);
     traces=scatter(
         name="OS 5km Tile",
-        text=tileRegister.tileRefs,
-        x=tileRegister.Lon_mid,
-        y=tileRegister.Lat_mid,
+        text=project.tileRegister.tileRefs,
+        x=project.tileRegister.Lon_mid,
+        y=project.tileRegister.Lat_mid,
         mode="markers",
         marker=attr(symbol=:square,
             size=5,color="#0652DD80"))
 
-    addtraces!(plt_nationwide,traces)
+    addtraces!(ui.plt_macro,traces)
 
     w_nationwide = Window(Dict(:title=>"Macro-map",:width=>500,:height=>700,:x=>1430,:y=>360))
-    body!(w_nationwide,plt_nationwide)
+    body!(w_nationwide,ui.plt_macro)
 
     ##########################################
-    return ui, plt_nationwide
+    return ui
 end

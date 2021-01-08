@@ -28,18 +28,17 @@ function ExtractData(project,DataSource,activeTiles,selected_cols,gridRefLimits)
 	return project
 end
 
-function LinkHaData(project)
+function LinkHaData(env,project)
 	# Find eastings/northings ranges
-	tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.csv"), DataFrame)
 	activeTiles = [tile.tile for tile in project.dat["gml"]]
-	iActiveTiles = vcat([findall(tileRegister.tileRefs.==activeTile) for activeTile in activeTiles]...)
+	iActiveTiles = vcat([findall(project.tileRegister.tileRefs.==activeTile) for activeTile in activeTiles]...)
 
 	# Find grid reference limits
 	gridRefLimits = Dict(
-		"easting_min" => minimum(tileRegister.eastings_min[iActiveTiles]),
-		"easting_max" => maximum(tileRegister.eastings_max[iActiveTiles]),
-		"northing_min" => minimum(tileRegister.northings_min[iActiveTiles]),
-		"northing_max" => maximum(tileRegister.northings_max[iActiveTiles]))
+		"easting_min" => minimum(project.tileRegister.eastings_min[iActiveTiles]),
+		"easting_max" => maximum(project.tileRegister.eastings_max[iActiveTiles]),
+		"northing_min" => minimum(project.tileRegister.northings_min[iActiveTiles]),
+		"northing_max" => maximum(project.tileRegister.northings_max[iActiveTiles]))
 
 	# Link HA data
 	DataSource = "HA"
