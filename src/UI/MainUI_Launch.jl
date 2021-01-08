@@ -1,7 +1,3 @@
-using ParaDwell
-using CSSUtil, Interact, Blink, CSV, DataFrames, PlotlyJS
-global env = ParaDwell.loadPaths()
-ParaDwell.OS_TileSummries(env)
 
 function WidgetBlock(widgets;name::String="",title::String="",subtitle::String="",ddList::OrderedDict)
     push!(widgets["buttons"], name=> button(title,
@@ -182,6 +178,3 @@ function LaunchMainUI(env)
     ##########################################
     return ui, plt_nationwide
 end
-
-# LaunchMainUI(env);
-# Launch(env,project)

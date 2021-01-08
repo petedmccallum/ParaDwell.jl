@@ -1,4 +1,3 @@
-include("MainUI_Launch.jl")
 
 function LayerTrace(gml,target,tileRegister;omitThemes::Array=[],colour::String="#aaaaaa",CropOutOfBounds::Bool=false)
     iKeep = findall([length(findall(descr.==target))>0 for descr in gml.summary.descr])
@@ -105,8 +104,3 @@ function Launch(env,project)
         close(w_popup)
     end
 end
-
-
-project = ParaDwell.Project()
-project.dat = Dict()
-Launch(env,project)

@@ -1,6 +1,3 @@
-# TEMP
-include("../Util/DataLinks.jl")
-include("GeoRef.jl")
 
 function ExtractData(project,DataSource,activeTiles,selected_cols,gridRefLimits)
 
@@ -75,5 +72,3 @@ function LinkHaData(project)
 
 	return project
 end
-
-project = LinkHaData(project)
