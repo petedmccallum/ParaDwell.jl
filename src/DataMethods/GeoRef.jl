@@ -2,8 +2,8 @@
 function RayTrace(project,itarget,m,c,e)
     # Set (gradient, c0 and x0) of ray
     # m0 = 0
-    x0 = project.dat["HA"].Easting[itarget]
-    c0 = project.dat["HA"].Northing[itarget]
+    x0 = project.dat["master"].Easting_HA[itarget]
+    c0 = project.dat["master"].Northing_HA[itarget]
 
     # Find x-crossing of ray and each boundary -> m*x + c = m0*x0 + c0
     x = (c0 .- c)./m
@@ -44,17 +44,19 @@ function GeoRef(project,k)
 
         # HA Eastings/Northings matches (can be more than one)
         iTarget = intersect(
-            findall(project.dat["HA"].Easting.>=minimum(e)),
-            findall(project.dat["HA"].Easting.<=maximum(e)),
-            findall(project.dat["HA"].Northing.>=minimum(n)),
-            findall(project.dat["HA"].Northing.<=maximum(n)),
+            findall(project.dat["master"].Easting_HA.>=minimum(e)),
+            findall(project.dat["master"].Easting_HA.<=maximum(e)),
+            findall(project.dat["master"].Northing_HA.>=minimum(n)),
+            findall(project.dat["master"].Northing_HA.<=maximum(n)),
         )
 
         interior_bool = [RayTrace(project,itarget,m,c,e) for itarget in iTarget]
 
         interior_pts = iTarget[interior_bool]
 
-        project.dat["HA"].osgb[interior_pts] .= project.dat["gml"][k].summary.osgb[j]
+        project.dat["master"].osgb_tile[interior_pts] .= project.dat["gml"][k].tile
+        project.dat["master"].iGml[interior_pts] .= j
+        project.dat["master"].osgb[interior_pts] .= project.dat["gml"][k].summary.osgb[j]
     end
 
     return project

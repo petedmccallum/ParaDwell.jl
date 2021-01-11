@@ -54,7 +54,7 @@ function LaunchMainUI(env)
     ui.titlePane = vbox(vskip(20px), hbox(hskip(20px),ui.title));
 
 
-    ## BUILD WIDGITS
+    ## BUILD WIDGETS
     widgets = Dict("buttons"=>Dict(),"toggles"=>Dict(),"dropdowns"=>Dict(),"Blocks"=>Dict())
     widgets = WidgetBlock(widgets;name="OS",title="Ordnance Survey",subtitle="",ddList=OrderedDict("(blank)" => "Value 0", "Pop. density" => "Value 1"))
     widgets = WidgetBlock(widgets;name="Census",title="Census 2011",subtitle="By Output Area",ddList=OrderedDict("(blank)             " => "Value 0", "Pop. density" => "Value 1"))

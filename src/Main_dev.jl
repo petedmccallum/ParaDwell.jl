@@ -15,8 +15,9 @@ include("DataMethods/GeoRef.jl")
 
 ui = LaunchMainUI(env);
 include("UI/ClickTile.jl")
-# ClickTile(env,project,ui)
+ClickTile(env,project,ui)
 project = SelectTile(env,project,ui,"HY40NE")
+# project = SelectTile(env,project,ui,"HY40NW")
 
 # Click tile
 project = LinkHaData(env,project)
