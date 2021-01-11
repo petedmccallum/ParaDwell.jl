@@ -60,7 +60,7 @@ function AddFields(project,addFields)
             # Find corresponding entries in GML
             iGml = project.dat["master"].iGml[iTile]
 
-            tmp[iTile] .= [arr[1] for arr in project.dat["gml"][k].summary[!,fields[1]][iGml]]
+            tmp[iTile] .= [arr[1] for arr in project.dat["gml"][k].summary[!,fields[i]][iGml]]
         end
 
         project.dat["master"][!,"$(fields[i])_GML"] = tmp
