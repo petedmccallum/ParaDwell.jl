@@ -59,11 +59,7 @@ function SelectTile(env,project,ui,tileRef)
         push!(project.dat["gml"],gml)
     end
 
-    # Plot layers
     traces = []
-    push!(traces,LayerTrace(gml,"Building",project.tileRegister[iTile,:];omitThemes=["Land"],colour="#1e3799"))
-    push!(traces,LayerTrace(gml,"Road Or Track",project.tileRegister[iTile,:];colour="#ff9f43",CropOutOfBounds=true))
-    push!(traces,LayerTrace(gml,"Natural Environment",project.tileRegister[iTile,:];colour="#aaaaaa",CropOutOfBounds=true))
 
     # Plot tile boundary
     x_boundary_OSEN = [project.tileRegister.eastings_min[iTile];project.tileRegister.eastings_max[iTile];project.tileRegister.eastings_max[iTile];project.tileRegister.eastings_min[iTile];project.tileRegister.eastings_min[iTile]]
@@ -87,6 +83,11 @@ function SelectTile(env,project,ui,tileRef)
         name=tileRef,
         hoverinfo="skip",hovertemplate=nothing
     )
+
+    # Plot map layers
+    push!(traces,LayerTrace(gml,"Building",project.tileRegister[iTile,:];omitThemes=["Land"],colour="#1e3799"))
+    push!(traces,LayerTrace(gml,"Road Or Track",project.tileRegister[iTile,:];colour="#ff9f43",CropOutOfBounds=true))
+    push!(traces,LayerTrace(gml,"Natural Environment",project.tileRegister[iTile,:];colour="#aaaaaa",CropOutOfBounds=true))
 
     # Add all new traces
     [addtraces!(ui.p0,trace) for trace in traces] # Main UI

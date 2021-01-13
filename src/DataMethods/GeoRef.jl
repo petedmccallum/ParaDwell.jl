@@ -27,11 +27,17 @@ function RayTrace(project,itarget,m,c,e)
 end
 
 function GeoRef(project,k)
-    # Identify buildings only (excluding features that include 'Land')
+    # Identify features labelled as "Building" in "descr" column, but also
+    # ... exclude "Land" and "Roads Tracks And Paths" in "theme col")
+    f = project.dat["gml"][k].summary
     iKeep = intersect(
-        findall([length(findall(descr.=="Building"))>0 for descr in project.dat["gml"][k].summary.descr]),
-        findall([length(findall(descr.=="Land"))==0 for descr in project.dat["gml"][k].summary.theme])
+        findall([length(findall(descr.=="Building"))>0 for descr in f.descr]),
+        findall([length(findall(theme.=="Land"))==0 for theme in f.theme]),
+        findall([length(findall(descr.=="Roads Tracks And Paths"))==0 for descr in f.theme])
     )
+    # Remove all geom with length <4 (adiabatic boundaries - no-rigorous method)
+    f = project.dat["gml"][k].summary[iKeep,:]
+    iKeep = iKeep[findall(length.([eastings[1] for eastings in f.eastings]).>=5)]
 
     for j in iKeep
         # Eastings/Northings vectors for current feature
