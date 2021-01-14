@@ -22,92 +22,96 @@ end
 
 #-----------------------------------------------------------
 function FindAdiabatics(project,polygons)
+	INonSelfRef(vec,i) = findall(vec.!=vec[i])
+	IAdiab(vec,not_i,i) = findall(vec[not_i[i]].==vec[i])
+	Ranges(l) = collect(range(1,stop=l))
+	IPoly(l,i) = Int.(ones(l)).*i
+	IMap(iPolyⱼ,i) = findall(iPolyⱼ.==i)
+	remap(iAdiab,iMapᵢ) = iAdiab[iMapᵢ]
+	iRedundantVertices(angles,tol_deg) = findall(abs.(diff(angles)).<(tol_deg*π/180)).+1
+	iSelectiveVertexRemoval(iAdiabⱼ,iRmⱼ) = iRmⱼ[[iAdiabⱼ[i].==iAdiabⱼ[i-1] for i in iRmⱼ]]
+	RemoveRedundantVertices(nⱼ,iRmⱼ,offset) = nⱼ[Not(iRmⱼ.+offset)]
 
-	# Create large DataFrame, one row per edge, for adjacency matching
-	ranges(l) = collect(range(1,stop=l))
-
+	# Generate list of all vertices (all polygons, one list)
 	cen_e = vcat(polygons.cen_e...)
 	cen_n = vcat(polygons.cen_n...)
 
+	# List of osgb refs
 	L = length.(polygons.cen_e)
-	osgb = Int.(vcat(ones.(L).*project.dat["master"].osgb...))
-	iEdge = vcat(ranges.(L)...)
-	grad = vcat(polygons.grad...)
+	osgbs = Int.(vcat(ones.(L).*project.dat["master"].osgb...))
+	iOtherOsgb = INonSelfRef.((osgbs,),1:length(cen_e))
 
-	edges = DataFrame(
-		:cen_e=>cen_e,
-		:cen_n=>cen_n,
-		:osgb=>osgb,
-		:iEdge=>iEdge,
-		:grad=>grad,
-	)
+	# List of edge sequence order
+	iEdge = vcat(Ranges.(L)...)
 
-	# Find line constant 'c' (y=mx+c)
-	edges[!,:e0_crossing] = edges.cen_n .- edges.cen_e.*edges.grad
+	# List of parent polygon indicces
+	iPoly = vcat(IPoly.(L,1:length(L))...)
 
-	# Find edges with similar grad and zero-crossing, from different polygons
-	L = size(edges,1)
-	withinTol(arr,tol) = [findall(abs.(arr.-val).<tol) for val in arr]
-	function MatchEdges(edges)
-		# Find edges throughout all domain with same gradient ±tol
-		i1 = withinTol(edges.grad,0.002)
-		# Find edges throughout all domain with same Eastings=0 crossing (line constant 'c') ±tol
-		i2 = withinTol(edges.e0_crossing,5)
-		# Exclude self reference of same edge/dwelling, plus edges from all other
-		# ... dwellings in same osgb polygon (building)
-		i4 = [findall(edges.osgb.!=ed) for ed in edges.osgb]
-		# Collapse to edges that meet all above criteria
-		iMatch = [intersect(i1[i],i2[i],i4[i]) for i in 1:L]
-	end
-	iMatch = MatchEdges(edges)
+	# Find all adjacencies, based on matching edge centroids ()
+	L = length(cen_e)
+	iAdiab = IAdiab.((cen_e,),(iOtherOsgb,),1:L)
+	adiabBool = length.(iAdiab).>0
 
-	# Exclude out-of-tollerance matches (e.g. tol=1.0m)
-	pythag(x,y) = sqrt(x^2+y^2)
-	L = length.(iMatch)
-	tol_dist = 1.
-	[iMatch[i]=iMatch[i][pythag.(edges.cen_e[i].-edges.cen_e[iMatch[i]],edges.cen_n[i].-edges.cen_n[iMatch[i]]).<=tol_dist] for i in 1:length(iMatch) if L[i].!=0]
+	# Remap adiabatic edge booleans back to parent polygons
+	L = nrow(polygons)
+	iMap = IMap.((iPoly,),1:L)
+	iAdiab = remap.((iAdiab,),iMap)
+	adiabBool = remap.((adiabBool,),iMap)
 
-	# Append to edges DataFrame
-	edges[!,:neighbours] = iMatch
-	edges[!,:adiabatic_bool] = length.(iMatch).>0
+	# Remove redundant vertices - first pass (matching centroids)
+	iRm₁ = iRedundantVertices.(polygons.orient,8.)
 
-	# Plot
-	addtraces!(ui.p0,scatter(
-		x=edges.cen_e[edges.adiabatic_bool],
-		y=edges.cen_n[edges.adiabatic_bool],
-		mode="markers"
-	))
+	# Check that for the vertex targeted for removal, that the connected edges
+	# ... are either both external, or both adiabatic (mixed should be retained)
+	iRm₂ = iSelectiveVertexRemoval.(adiabBool,iRm₁)
 
-	return edges
+	# Remove redundant vertices
+	n′ = RemoveRedundantVertices.(polygons.n,iRm₂,0)
+	e′ = RemoveRedundantVertices.(polygons.e,iRm₂,0)
+	iAdiab′ = RemoveRedundantVertices.(iAdiab,iRm₂,-1)
+	adiabBool′ = RemoveRedundantVertices.(adiabBool,iRm₂,-1)
+
+	return n′, e′, iAdiab′, adiabBool′
 end
 
-#-----------------------------------------------------------
-function ProcessGeom(project)
-
+function CompilePolygons(n,e)
+	Orient(nᵢ,eᵢ) = atan.(diff(nᵢ)./diff(eᵢ))
 	L = nrow(project.dat["master"])
-
-	# DataFrame of footprints (arrays of northings/eastings/diffs/centroids)
-	n = project.dat["master"].northings_GML
-	e = project.dat["master"].eastings_GML
+	# Evaluate edge orientations
+	orient = Orient.(n,e)
+	# Eval diffs and centroids
 	Δn = diff.(n)
 	Δe = diff.(e)
 	cen_n = [n[i][1:end-1] .+ Δn[i]./2 for i in 1:L]
 	cen_e = [e[i][1:end-1] .+ Δe[i]./2 for i in 1:L]
 	# Combine in DataFrame
-	polygons = DataFrame(:n=>n,:e=>e,:Δn=>Δn,:Δe=>Δe,:cen_n=>cen_n,:cen_e=>cen_e)
+	polygons = DataFrame(
+		:n=>n,
+		:e=>e,
+		:Δn=>Δn,
+		:Δe=>Δe,
+		:cen_n=>cen_n,
+		:cen_e=>cen_e,
+		:orient=>orient
+	)
+	return polygons
+end
+#-----------------------------------------------------------
+function ProcessGeom(project)
+	# Gather vertices, diffs, and centroids
+	n = deepcopy(project.dat["master"].northings_GML)
+	e = deepcopy(project.dat["master"].eastings_GML)
 
-	# Line gradients
-	grad(Δn,Δe) = Δn./Δe
-	polygons[!,:grad] = grad.(polygons.Δn,polygons.Δe)
+	# First pass (pre-clean)
+	polygons = CompilePolygons(n,e)
+	# Find adiabatics and remove redundant vertices
+	n, e, iAdiab, adiabBool = FindAdiabatics(project,polygons)
+	# Second pass (post-clean)
+	polygons = CompilePolygons(n,e)
+	polygons[!,:iAdiab] = iAdiab
+	polygons[!,:adiabBool] = adiabBool
 
-	polygons = Orientation(project,polygons)
-	edges = FindAdiabatics(project,polygons)
+	# polygons = Orientation(project,polygons)
 
 	return polygons
 end
-
-#-----------------------------------------------------------
-
-@time polygons = ProcessGeom(project)
-
-[length(polygons[1,c]) for c in 1:7]
