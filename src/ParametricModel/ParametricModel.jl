@@ -33,45 +33,46 @@ function FindAdiabatics(project,polygons)
 	RemoveRedundantVertices(nⱼ,iRmⱼ,offset) = nⱼ[Not(iRmⱼ.+offset)]
 
 	# Generate list of all vertices (all polygons, one list)
-	cen_e = vcat(polygons.cen_e...)
-	cen_n = vcat(polygons.cen_n...)
+	edges = DataFrame()
+	edges[!,:cen_e] = vcat(polygons.cen_e...)
+	edges[!,:cen_n] = vcat(polygons.cen_n...)
 
 	# List of osgb refs
 	L = length.(polygons.cen_e)
-	osgbs = Int.(vcat(ones.(L).*project.dat["master"].osgb...))
-	iOtherOsgb = INonSelfRef.((osgbs,),1:length(cen_e))
+	edges[!,:osgbs] = Int.(vcat(ones.(L).*project.dat["master"].osgb...))
+	edges[!,:iOtherOsgb] = INonSelfRef.((edges.osgbs,),1:length(edges.cen_e))
 
 	# List of edge sequence order
-	iEdge = vcat(Ranges.(L)...)
+	edges[!,:iEdge] = vcat(Ranges.(L)...)
 
 	# List of parent polygon indicces
-	iPoly = vcat(IPoly.(L,1:length(L))...)
+	edges[!,:iPoly] = vcat(IPoly.(L,1:length(L))...)
 
 	# Find all adjacencies, based on matching edge centroids ()
-	L = length(cen_e)
-	iAdiab = IAdiab.((cen_e,),(iOtherOsgb,),1:L)
-	adiabBool = length.(iAdiab).>0
+	L = length(edges.cen_e)
+	edges[!,:iAdiab] = IAdiab.((edges.cen_e,),(edges.iOtherOsgb,),1:L)
+	edges[!,:adiabBool] = length.(edges.iAdiab).>0
 
-	# Remap adiabatic edge booleans back to parent polygons
+	# Remap adiabatic edges and booleans back to parent polygons
 	L = nrow(polygons)
-	iMap = IMap.((iPoly,),1:L)
-	iAdiab = remap.((iAdiab,),iMap)
-	adiabBool = remap.((adiabBool,),iMap)
+	iMap = IMap.((edges.iPoly,),1:L)
+	iAdiab′ = remap.((edges.iAdiab,),iMap)
+	adiabBool′ = remap.((edges.adiabBool,),iMap)
 
 	# Remove redundant vertices - first pass (matching centroids)
 	iRm₁ = iRedundantVertices.(polygons.orient,8.)
 
 	# Check that for the vertex targeted for removal, that the connected edges
 	# ... are either both external, or both adiabatic (mixed should be retained)
-	iRm₂ = iSelectiveVertexRemoval.(adiabBool,iRm₁)
+	iRm₂ = iSelectiveVertexRemoval.(adiabBool′,iRm₁)
 
 	# Remove redundant vertices
-	n′ = RemoveRedundantVertices.(polygons.n,iRm₂,0)
-	e′ = RemoveRedundantVertices.(polygons.e,iRm₂,0)
-	iAdiab′ = RemoveRedundantVertices.(iAdiab,iRm₂,-1)
-	adiabBool′ = RemoveRedundantVertices.(adiabBool,iRm₂,-1)
+	n″ = RemoveRedundantVertices.(polygons.n,iRm₂,0)
+	e″ = RemoveRedundantVertices.(polygons.e,iRm₂,0)
+	iAdiab″ = RemoveRedundantVertices.(iAdiab′,iRm₂,-1)
+	adiabBool″ = RemoveRedundantVertices.(adiabBool′,iRm₂,-1)
 
-	return n′, e′, iAdiab′, adiabBool′
+	return n″, e″, iAdiab″, adiabBool″
 end
 
 function CompilePolygons(n,e)
