@@ -23,7 +23,7 @@ end
 #-----------------------------------------------------------
 function FindAdiabatics(project,polygons)
 	INonSelfRef(vec,i) = findall(vec.!=vec[i])
-	IAdiab(vec,not_i,i) = findall(vec[not_i[i]].==vec[i])
+	IAdiab(vec₁,vec₂,not_i,i) = intersect(findall(vec₁[not_i[i]].==vec₁[i]),findall(vec₂[not_i[i]].==vec₂[i]))
 	Ranges(l) = collect(range(1,stop=l))
 	IPoly(l,i) = Int.(ones(l)).*i
 	IMap(iPolyⱼ,i) = findall(iPolyⱼ.==i)
@@ -48,9 +48,9 @@ function FindAdiabatics(project,polygons)
 	# List of parent polygon indicces
 	edges[!,:iPoly] = vcat(IPoly.(L,1:length(L))...)
 
-	# Find all adjacencies, based on matching edge centroids ()
+	# Find all adjacencies, based on matching edge centroids
 	L = length(edges.cen_e)
-	edges[!,:iAdiab] = IAdiab.((edges.cen_e,),(edges.iOtherOsgb,),1:L)
+	edges[!,:iAdiab] = IAdiab.((edges.cen_e,),(edges.cen_n,),(edges.iOtherOsgb,),1:L)
 	edges[!,:adiabBool] = length.(edges.iAdiab).>0
 
 	# Remap adiabatic edges and booleans back to parent polygons
