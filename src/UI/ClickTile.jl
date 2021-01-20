@@ -38,19 +38,6 @@ function LayerTrace(gml,target,tileReg;omitThemes::Array=[],colour::String="#aaa
 end
 
 function SelectTile(env,project,ui,tileRef)
-    function writeJSON(json_string,tileRef)
-        open(".GmlParsed/$(tileRef).json","w") do f
-            write(f,json_string)
-        end
-    end
-    function readJSON(tileRef)
-        io = open(".GmlParsed/$(tileRef).json")
-        content = readlines(io)
-        close(io)
-        data_dict = JSON.parse(content[1])
-        data = DataFrame(data_dict)
-    end
-
 
     # Index of current tile in register
     iTile = findfirst(project.tileRegister.tileRefs.==tileRef)
@@ -68,7 +55,7 @@ function SelectTile(env,project,ui,tileRef)
     GmlParsedDir = readdir(joinpath(env.paths[:projects],".GmlParsed"))
     if sum(occursin.(tileRef,GmlParsedDir)).==1
         # Load data for new tile
-        data_dict = readJSON(tileRef)
+        data_dict = readJSON(".GmlParsed",tileRef)
         data = DataFrame(data_dict)
 
         gml = ParaDwell.GML(tileRef,"",[""],[[""]],data)
@@ -76,7 +63,7 @@ function SelectTile(env,project,ui,tileRef)
         # Load data for new tile
         gml = ParaDwell.ProcessGMLs(env.paths[:OS],tileRef)
         json_string = JSON.json(gml.summary)
-        writeJSON(json_string,tileRef)
+        writeJSON(json_string,".GmlParsed",tileRef)
     end
 
 

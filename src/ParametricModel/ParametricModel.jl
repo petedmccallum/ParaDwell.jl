@@ -112,7 +112,12 @@ function ProcessGeom(project)
 	polygons[!,:iAdiab] = iAdiab
 	polygons[!,:adiabBool] = adiabBool
 
+	project.dat["master"].northings_GML = polygons.n
+	project.dat["master"].eastings_GML = polygons.e
+	project.dat["master"][!,"iAdiab"] = iAdiab
+	project.dat["master"][!,"adiabBool"] = adiabBool
+
 	# polygons = Orientation(project,polygons)
 
-	return polygons
+	return project
 end

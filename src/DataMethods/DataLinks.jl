@@ -1,5 +1,21 @@
+function LiesWithin(project,activeTile,e,n)
+    iActiveTile = findall(project.tileRegister.tileRefs.==activeTile)
+    gridRefLimits = Dict(
+        "easting_min" => minimum(project.tileRegister.eastings_min[iActiveTile]),
+        "easting_max" => maximum(project.tileRegister.eastings_max[iActiveTile]),
+        "northing_min" => minimum(project.tileRegister.northings_min[iActiveTile]),
+        "northing_max" => maximum(project.tileRegister.northings_max[iActiveTile]))
+    iKeep = intersect(
+        findall(e .>= gridRefLimits["easting_min"]),
+        findall(e .<  gridRefLimits["easting_max"]),
+        findall(n .>= gridRefLimits["northing_min"]),
+        findall(n .<  gridRefLimits["northing_max"])
+    )
+end
+
+
 #-------------------------------------------------------------------------------
-function ExtractData(project,DataSource,activeTiles,selected_cols,gridRefLimits)
+function ExtractData(project,DataSource,activeTiles,selected_cols)
 
 	# Find file names (from "<ProjectDir>/.DataFileLinks/<DataSource>.txt")
 	fnames = DataFileName(DataSource)
@@ -14,13 +30,8 @@ function ExtractData(project,DataSource,activeTiles,selected_cols,gridRefLimits)
 	# Merge all returned dataframes
 	tmp = vcat(tmp...)
 
-	# Trim data to grid reference limits
-	iKeep = intersect(
-		findall(tmp.Easting  .>= gridRefLimits["easting_min"]),
-		findall(tmp.Easting  .<  gridRefLimits["easting_max"]),
-		findall(tmp.Northing .>= gridRefLimits["northing_min"]),
-		findall(tmp.Northing .<  gridRefLimits["northing_max"])
-	)
+	# Find points within active tiles
+	iKeep = sort(vcat(LiesWithin.((project,),activeTiles,(tmp.Easting,),(tmp.Northing,))...))
 
 	# Push to project struct (selected cols only)
 	push!(project.dat,DataSource=>tmp[iKeep,selected_cols])
@@ -56,7 +67,10 @@ function AddFields(project,addFields)
 
         for k in 1:length(project.dat["gml"])
             # Find data rows in master dataframe, relating to current tile
-            iTile = project.dat["master"].osgb_tile .== project.dat["gml"][k].tile
+            iTile = intersect(
+				findall(project.dat["master"].osgb_tile .== project.dat["gml"][k].tile),
+				findall(project.dat["master"].iGml.!=0)
+			)
             # Find corresponding entries in GML
             iGml = project.dat["master"].iGml[iTile]
 
@@ -71,20 +85,12 @@ end
 function LinkHaData(env,project)
 	# Find eastings/northings ranges
 	activeTiles = [tile.tile for tile in project.dat["gml"]]
-	iActiveTiles = vcat([findall(project.tileRegister.tileRefs.==activeTile) for activeTile in activeTiles]...)
-
-	# Find grid reference limits
-	gridRefLimits = Dict(
-		"easting_min" => minimum(project.tileRegister.eastings_min[iActiveTiles]),
-		"easting_max" => maximum(project.tileRegister.eastings_max[iActiveTiles]),
-		"northing_min" => minimum(project.tileRegister.northings_min[iActiveTiles]),
-		"northing_max" => maximum(project.tileRegister.northings_max[iActiveTiles]))
 
 	# Link HA data
 	DataSource = "HA"
 	selected_cols = [:UPRN,:Easting,:Northing,:Full_postal_address,
 		:Building_block_ID,:Data_zone_code,:Data_zone,]
-	project = ExtractData(project,DataSource,activeTiles,selected_cols,gridRefLimits)
+	project = ExtractData(project,DataSource,activeTiles,selected_cols)
 
 	# Create new master dataframe from HA data
 	push!(project.dat,"master"=>deepcopy(project.dat["HA"]))
@@ -93,6 +99,9 @@ function LinkHaData(env,project)
 
 	# Geo-reference master data against GIS data
 	project.dat["master"][!,"osgb_tile"] = fill!(Array{String}(undef,size(project.dat["master"],1)),"")
+	iTiles = LiesWithin.((project,),activeTiles,(project.dat["HA"].Easting,),(project.dat["HA"].Northing,))
+	IMap(iTile,activeTile) = project.dat["master"].osgb_tile[iTile].=activeTile
+	IMap.(iTiles,activeTiles)
 	project.dat["master"][!,"iGml"] = fill!(Array{Int64}(undef,size(project.dat["master"],1)),0)
 	project.dat["master"][!,"osgb"] = fill!(Array{Int64}(undef,size(project.dat["master"],1)),0)
 	[GeoRef(project,k) for k in 1:length(project.dat["gml"])]
@@ -103,6 +112,19 @@ function LinkHaData(env,project)
 	    "northings"=>(Array{Float64},[]),
 	)
 	AddFields(project,addFields)
+
+	# Remove redunant vertices and scan for adjacencies
+	project = ProcessGeom(project)
+
+	# Send compiled stock data to JSON (by tile)
+    function WriteStockJSON(project,tile)
+        data_byTile = project.dat["master"][project.dat["master"].osgb_tile.==tile,:]
+        json_string = JSON.json(data_byTile)
+
+        writeJSON(json_string,"BuildingStock",tile)
+    end
+    WriteStockJSON.((project,),activeTiles)
+
 
 	# Remove rows with no osgb (unsuccessful geo-ref)
 	delete!(project.dat["master"],ismissing.(project.dat["master"].osgb))

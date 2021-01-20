@@ -60,7 +60,7 @@ function GeoRef(project,k)
 
         interior_pts = iTarget[interior_bool]
 
-        project.dat["master"].osgb_tile[interior_pts] .= project.dat["gml"][k].tile
+        # project.dat["master"].osgb_tile[interior_pts] .= project.dat["gml"][k].tile
         project.dat["master"].iGml[interior_pts] .= j
         project.dat["master"].osgb[interior_pts] .= project.dat["gml"][k].summary.osgb[j]
     end
