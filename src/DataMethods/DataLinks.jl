@@ -82,7 +82,8 @@ function LinkHaData(env,project)
 
 	# Link HA data
 	DataSource = "HA"
-	selected_cols = [:UPRN,:Easting,:Northing,:Full_postal_address,:Building_block_ID]
+	selected_cols = [:UPRN,:Easting,:Northing,:Full_postal_address,
+		:Building_block_ID,:Data_zone_code,:Data_zone,]
 	project = ExtractData(project,DataSource,activeTiles,selected_cols,gridRefLimits)
 
 	# Create new master dataframe from HA data

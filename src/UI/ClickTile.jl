@@ -47,12 +47,30 @@ function SelectTile(env,project,ui,tileRef)
     body!(w_popup,"Loading $(tileRef) ...")
     sleep(0.1)
 
-    # Clear blank initialising trace, optionally clear all traces
+    # Clear blank initialising trace
     iRm = findall([tr[:name] for tr in ui.p0.plot.data].=="blank")
     [deletetraces!(ui.p0,i) for i in iRm]
 
-    # Load data for new tile
-    gml = ParaDwell.ProcessGMLs(env.paths[:OS],tileRef)
+    # Check for pre-existing parsed GML
+    GmlParsedDir = readdir(joinpath(env.paths[:projects],".GmlParsed"))
+    if sum(occursin.(tileRef,GmlParsedDir)).==1
+        # Load data for new tile
+        data = CSV.read(".GmlParsed/$(tileRef).csv",DataFrame)
+        ParseArray(str) = replace.(split(replace(replace(str,"SubString{String}["=>""),"]"=>""),","),"\""=>"")
+
+        data.theme = ParseArray.(data.theme)
+        data.descr = ParseArray.(data.descr)
+        data.eastings = JSON.parse.(data.eastings;inttype=Float64)
+        data.northings = JSON.parse.(data.northings;inttype=Float64)
+
+        gml = ParaDwell.GML(tileRef,"",[""],[[""]],data)
+    else
+        # Load data for new tile
+        gml = ParaDwell.ProcessGMLs(env.paths[:OS],tileRef)
+        CSV.write(".GmlParsed/$(tileRef).csv",gml.summary)
+    end
+
+
     if !haskey(project.dat,"gml")
         push!(project.dat,"gml"=>[gml])
     else
@@ -85,9 +103,9 @@ function SelectTile(env,project,ui,tileRef)
     )
 
     # Plot map layers
-    push!(traces,LayerTrace(gml,"Building",project.tileRegister[iTile,:];omitThemes=["Land"],colour="#1e3799"))
-    push!(traces,LayerTrace(gml,"Road Or Track",project.tileRegister[iTile,:];colour="#ff9f43",CropOutOfBounds=true))
     push!(traces,LayerTrace(gml,"Natural Environment",project.tileRegister[iTile,:];colour="#aaaaaa",CropOutOfBounds=true))
+    push!(traces,LayerTrace(gml,"Road Or Track",project.tileRegister[iTile,:];colour="#ff9f43",CropOutOfBounds=true))
+    push!(traces,LayerTrace(gml,"Building",project.tileRegister[iTile,:];omitThemes=["Land"],colour="#1e3799"))
 
     # Add all new traces
     [addtraces!(ui.p0,trace) for trace in traces] # Main UI
