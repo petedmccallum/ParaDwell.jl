@@ -82,9 +82,44 @@ function AddFields(project,addFields)
 end
 
 #-------------------------------------------------------------------------------
-function LinkHaData(env,project)
-	# Find eastings/northings ranges
+function LoadStockData(env,project)
+	# List active tiles
 	activeTiles = [tile.tile for tile in project.dat["gml"]]
+
+	# List saved stock JSONs
+	BuildingStockDir = readdir(joinpath(env.paths[:projects],"BuildingStock"))
+
+	# Find relevant saved JSONs
+	ExistingTileJSONs(activeTile,BuildingStockDir) = sum(occursin.(activeTile,BuildingStockDir))>0
+	iKeep = vcat(ExistingTileJSONs.(activeTiles,(BuildingStockDir,))...)
+
+	# Restore existing JSONs (if any JSON are found)
+	stockData = []
+	if !isempty(iKeep)
+		push!(stockData,vcat(readJSON.("BuildingStock",activeTiles[iKeep])...))
+	end
+
+	# Evaluate new stock data, where existing JSONs are not found
+	if sum(iKeep)!=length(activeTiles)
+		project = LinkHaData(env,project,activeTiles[Not(iKeep)])
+		push!(stockData,project.dat["master"])
+	end
+
+	# Check that column names match, rerun if necessary, then merge all stock data
+	if length(stockData).==2
+		MatchingDfCols(col₁,cols₂) = sum(cols₂.==col₁)
+		cols = sort.(names.(stockData))
+		if sum(MatchingDfCols.(cols[1],(cols[2],)))!=length(cols[1])
+			project = LinkHaData(env,project,activeTiles[iKeep])
+			stockData[1] = deepcopy(project.dat["master"])
+		end
+	end
+	project.dat["master"] = vcat(stockData...)
+	return project
+end
+
+#-------------------------------------------------------------------------------
+function LinkHaData(env,project,activeTiles)
 
 	# Link HA data
 	DataSource = "HA"
@@ -126,28 +161,7 @@ function LinkHaData(env,project)
     WriteStockJSON.((project,),activeTiles)
 
 
-	# Remove rows with no osgb (unsuccessful geo-ref)
-	delete!(project.dat["master"],ismissing.(project.dat["master"].osgb))
 
-	addtraces!(ui.p0,
-	    scatter(
-	        x=project.dat["master"].Easting_HA[ismissing.(project.dat["master"].osgb).==false],
-	        y=project.dat["master"].Northing_HA[ismissing.(project.dat["master"].osgb).==false],
-	        mode="markers",
-	        marker=attr(color="#16a085dd",size=4),
-	        name="master",
-	        text=project.dat["master"].Full_postal_address[ismissing.(project.dat["master"].osgb).==false]
-	    )
-	)
-	addtraces!(ui.p0,
-	    scatter(
-	        x=project.dat["master"].Easting_HA[ismissing.(project.dat["master"].osgb).==true],
-	        y=project.dat["master"].Northing_HA[ismissing.(project.dat["master"].osgb).==true],
-	        mode="markers",
-	        marker=attr(color="#dd2222dd",size=4),
-	        name="HA (no link)"
-	    )
-	)
 
 	return project
 end
