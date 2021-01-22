@@ -116,6 +116,10 @@ function ProcessGeom(project)
 	project.dat["master"].eastings_GML = polygons.e
 	project.dat["master"][!,"iAdiab"] = iAdiab
 	project.dat["master"][!,"adiabBool"] = adiabBool
+	pyth(Δx,Δy) = sqrt.(Δx.^2 .+ Δy.^2)
+	project.dat["master"][!,"dims"] = pyth.(polygons.Δe,polygons.Δn)
+
+	project.dat["master"][!,"adiabBool"] = adiabBool
 
 	# polygons = Orientation(project,polygons)
 

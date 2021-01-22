@@ -91,7 +91,7 @@ function LoadStockData(env,project)
 
 	# Find relevant saved JSONs
 	ExistingTileJSONs(activeTile,BuildingStockDir) = sum(occursin.(activeTile,BuildingStockDir))>0
-	iKeep = vcat(ExistingTileJSONs.(activeTiles,(BuildingStockDir,))...)
+	iKeep = findall(vcat(ExistingTileJSONs.(activeTiles,(BuildingStockDir,))...))
 
 	# Restore existing JSONs (if any JSON are found)
 	stockData = []
