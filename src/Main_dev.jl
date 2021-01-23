@@ -19,6 +19,7 @@ include("Util/DataLinks.jl")
 include("Util/JsonHandling.jl")
 include("DataMethods/DataLinks.jl")
 include("DataMethods/GeoRef.jl")
+include("ParametricModel/ProcessGeom.jl")
 include("ParametricModel/ParametricModel.jl")
 
 ui = LaunchMainUI(env);
@@ -31,3 +32,5 @@ project = SelectTile(env,project,ui,"HY40NE")
 # project = SelectTile(env,project,ui,"NZ16SE")
 
 @time project = LoadStockData(env,project)
+
+@time project = buildarchetypes(project)
