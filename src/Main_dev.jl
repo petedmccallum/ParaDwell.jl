@@ -26,9 +26,9 @@ ui = LaunchMainUI(env);
 include("UI/ClickTile.jl")
 ClickTile(env,project,ui)
 project = SelectTile(env,project,ui,"HY40NE")
-# project = SelectTile(env,project,ui,"HY40NW")
-# project = SelectTile(env,project,ui,"HY41SW")
-# project = SelectTile(env,project,ui,"HY41SE")
+project = SelectTile(env,project,ui,"HY40NW")
+project = SelectTile(env,project,ui,"HY41SW")
+project = SelectTile(env,project,ui,"HY41SE")
 # project = SelectTile(env,project,ui,"NZ16SE")
 
 @time project = LoadStockData(env,project)

@@ -100,7 +100,7 @@ function LoadStockData(env,project)
 	end
 
 	# Evaluate new stock data, where existing JSONs are not found
-	if sum(iKeep)!=length(activeTiles)
+	if length(iKeep)!=length(activeTiles)
 		project = LinkHaData(env,project,activeTiles[Not(iKeep)])
 		push!(stockData,project.dat["master"])
 	end
