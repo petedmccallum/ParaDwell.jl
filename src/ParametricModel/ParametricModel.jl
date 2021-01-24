@@ -2,6 +2,10 @@
 function buildarchetypes(project)
     stockdata = project.dat["master"]
 
+    # Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
+    stockdata[!,:UPRNs_undersameroof] = findflats(stockdata[:,[:UPRN,:osgb]])
+
+    # Identify different plan shapes, based on vertex count
     L = length.(stockdata.dims)
     vertexcount(L,i) = findall(L.==i)
     ishapes = Dict()
@@ -9,6 +13,7 @@ function buildarchetypes(project)
     push!(ishapes,"6vert"=>vertexcount(L,6))
     push!(ishapes,"8vert"=>vertexcount(L,8))
 
+    # Prepare new columns for archetype fields
     L = nrow(stockdata)
     stockdata[!,:width] = fill!(Array{Union{Missing,Float64}}(undef,L),missing)
     stockdata[!,:depth] = fill!(Array{Union{Missing,Float64}}(undef,L),missing)
