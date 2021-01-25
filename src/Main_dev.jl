@@ -20,7 +20,7 @@ include("Util/JsonHandling.jl")
 include("DataMethods/DataLinks.jl")
 include("DataMethods/GeoRef.jl")
 include("ParametricModel/ProcessGeom.jl")
-include("Util/ParametricModel.jl")
+include("ParametricModel/LinkMultiDwellingPlans.jl")
 include("ParametricModel/ParametricModel.jl")
 
 ui = LaunchMainUI(env);

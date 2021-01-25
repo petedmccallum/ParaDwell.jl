@@ -1,4 +1,4 @@
-function findflats(stockdata)
+function multidwellplans(stockdata)
     # Find other dwellings within same footprint
     undersameroof(uprns,osgbs,osgb) = uprns[findall(osgbs.==osgb)]
     uprns_undersameroof = undersameroof.((stockdata.UPRN,),(stockdata.osgb,),stockdata.osgb)

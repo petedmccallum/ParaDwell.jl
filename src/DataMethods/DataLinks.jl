@@ -151,6 +151,9 @@ function LinkHaData(env,project,activeTiles)
 	# Remove redunant vertices and scan for adjacencies
 	project = ProcessGeom(project)
 
+	# Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
+	project.dat["master"][!,:UPRNs_undersameroof] = multidwellplans(project.dat["master"][:,[:UPRN,:osgb]])
+
 	# Send compiled stock data to JSON (by tile)
     function WriteStockJSON(project,tile)
         data_byTile = project.dat["master"][project.dat["master"].osgb_tile.==tile,:]

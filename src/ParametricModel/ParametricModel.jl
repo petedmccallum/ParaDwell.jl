@@ -2,9 +2,6 @@
 function buildarchetypes(project)
     stockdata = project.dat["master"]
 
-    # Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
-    stockdata[!,:UPRNs_undersameroof] = findflats(stockdata[:,[:UPRN,:osgb]])
-
     # Identify different plan shapes, based on vertex count
     L = length.(stockdata.dims)
     vertexcount(L,i) = findall(L.==i)
