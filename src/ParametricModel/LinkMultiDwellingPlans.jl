@@ -3,8 +3,12 @@ function multidwellplans(stockdata)
     undersameroof(uprns,osgbs,osgb) = uprns[findall(osgbs.==osgb)]
     uprns_undersameroof = undersameroof.((stockdata.UPRN,),(stockdata.osgb,),stockdata.osgb) # <- WARNING: SLOW OPERATION
 
+    # Exclude UPRNs with no OSGB link (failed geo-ref)
+    i_nolink = findall(stockdata.iGml .== 0)
+
     # Find multi-dwelling buildings only
     n_uprns_undersameroof = length.(uprns_undersameroof)
+    n_uprns_undersameroof[i_nolink] .= 0
     i_flats = findall(n_uprns_undersameroof.>1)
 
     # Create unique_id from combinations of all UPRNs (including self ref)
