@@ -1,5 +1,6 @@
 using ParaDwell
 using CSSUtil, Interact, Blink, CSV, DataFrames, PlotlyJS, StatsBase, JSON
+using Dates
 
 # Constructor script
 env = ParaDwell.loadPaths()
@@ -17,7 +18,9 @@ project.tileRegister = CSV.read(joinpath(env.paths[:projects],".OS_TileRegister.
 include("UI/MainUI_Launch.jl")
 include("Util/DataLinks.jl")
 include("Util/JsonHandling.jl")
+include("Util/ExportData.jl")
 include("DataMethods/DataLinks.jl")
+include("DataMethods/LinkEpcData.jl")
 include("DataMethods/GeoRef.jl")
 include("ParametricModel/ProcessGeom.jl")
 include("ParametricModel/LinkMultiDwellingPlans.jl")
@@ -35,3 +38,5 @@ project = SelectTile(env,project,ui,"HY41SE")
 @time project = LoadStockData(env,project)
 
 @time project = buildarchetypes(project)
+
+exportstockdata(project)

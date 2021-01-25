@@ -15,7 +15,7 @@ end
 
 
 #-------------------------------------------------------------------------------
-function ExtractData(project,DataSource,activeTiles,selected_cols)
+function ExtractData(project,DataSource,activeTiles,selected_cols;method="gridref")
 
 	# Find file names (from "<ProjectDir>/.DataFileLinks/<DataSource>.txt")
 	fnames = DataFileName(DataSource)
@@ -31,7 +31,11 @@ function ExtractData(project,DataSource,activeTiles,selected_cols)
 	tmp = vcat(tmp...)
 
 	# Find points within active tiles
-	iKeep = sort(vcat(LiesWithin.((project,),activeTiles,(tmp.Easting,),(tmp.Northing,))...))
+	if method == "gridref"
+		iKeep = sort(vcat(LiesWithin.((project,),activeTiles,(tmp.Easting,),(tmp.Northing,))...))
+	elseif method == "uprn"
+		iKeep = 1:nrow(tmp)
+	end
 
 	# Push to project struct (selected cols only)
 	push!(project.dat,DataSource=>tmp[iKeep,selected_cols])
@@ -61,7 +65,7 @@ function AddFields(project,addFields)
         # Template array
         tmp = fill!(Array{
             addFields[fields[i]][1]
-        }(undef,size(project.dat["master"],1)),
+        }(undef,nrow(project.dat["master"])),
             addFields[fields[i]][2]
         )
 
@@ -74,7 +78,12 @@ function AddFields(project,addFields)
             # Find corresponding entries in GML
             iGml = project.dat["master"].iGml[iTile]
 
-            tmp[iTile] .= [arr[1] for arr in project.dat["gml"][k].summary[!,fields[i]][iGml]]
+			coldata = project.dat["gml"][k].summary[!,fields[i]][iGml]
+            if fields[i] == "eastings" || fields[i] == "northings"
+				arraypos1(coldata) = coldata[1]
+				coldata = arraypos1.(coldata)
+			end
+			tmp[iTile] .= coldata
         end
 
         project.dat["master"][!,"$(fields[i])_GML"] = tmp
@@ -83,6 +92,14 @@ end
 
 #-------------------------------------------------------------------------------
 function LoadStockData(env,project)
+	# Send compiled stock data to JSON (by tile)
+	function WriteStockJSON(project,tile)
+		data_byTile = project.dat["master"][project.dat["master"].osgb_tile.==tile,:]
+		json_string = JSON.json(data_byTile)
+
+		writeJSON(json_string,"BuildingStock",tile)
+	end
+
 	# List active tiles
 	activeTiles = [tile.tile for tile in project.dat["gml"]]
 
@@ -108,7 +125,9 @@ function LoadStockData(env,project)
 	# Evaluate new stock data, where existing JSONs are not found/don't match
 	if length(iKeep)!=length(activeTiles)
 		project = LinkHaData(env,project,activeTiles[Not(iKeep)])
+		project = link_epcdata(env,project,activeTiles[Not(iKeep)])
 		push!(stockData,project.dat["master"])
+		WriteStockJSON.((project,),activeTiles[Not(iKeep)])
 	end
 
 	# Check that column names match, rerun if necessary, then merge all stock data
@@ -117,10 +136,16 @@ function LoadStockData(env,project)
 		cols = sort.(names.(stockData))
 		if sum(MatchingDfCols.(cols[1],(cols[2],)))!=length(cols[1])
 			project = LinkHaData(env,project,activeTiles[iKeep])
+			project = link_epcdata(env,project,activeTiles[iKeep])
 			stockData[1] = deepcopy(project.dat["master"])
+			project.dat["master"] = vcat(stockData...)
+			WriteStockJSON.((project,),activeTiles[iKeep])
 		end
 	end
+
 	project.dat["master"] = vcat(stockData...)
+
+
 	return project
 end
 
@@ -131,7 +156,7 @@ function LinkHaData(env,project,activeTiles)
 	DataSource = "HA"
 	selected_cols = [:UPRN,:Easting,:Northing,:Full_postal_address,
 		:Building_block_ID,:Data_zone_code,:Data_zone,:Property_type,]
-	project = ExtractData(project,DataSource,activeTiles,selected_cols)
+	project = ExtractData(project,DataSource,activeTiles,selected_cols;method="gridref")
 
 	# Create new master dataframe from HA data
 	push!(project.dat,"master"=>deepcopy(project.dat["HA"]))
@@ -158,21 +183,9 @@ function LinkHaData(env,project,activeTiles)
 	project = ProcessGeom(project)
 
 	# Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
-	n_uprns_undersameroof, uprns_undersameroof = multidwellplans(project.dat["master"][:,[:UPRN,:osgb]])
+	n_uprns_undersameroof, uprns_undersameroof = multidwellplans(project.dat["master"][:,[:UPRN,:osgb,:iGml]])
 	project.dat["master"][!,:nUPRNs_undersameroof] = n_uprns_undersameroof
 	project.dat["master"][!,:UPRNs_undersameroof] = uprns_undersameroof
-
-	# Send compiled stock data to JSON (by tile)
-    function WriteStockJSON(project,tile)
-        data_byTile = project.dat["master"][project.dat["master"].osgb_tile.==tile,:]
-        json_string = JSON.json(data_byTile)
-
-        writeJSON(json_string,"BuildingStock",tile)
-    end
-    WriteStockJSON.((project,),activeTiles)
-
-
-
 
 	return project
 end
