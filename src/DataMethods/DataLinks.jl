@@ -159,8 +159,8 @@ function LinkHaData(env,project,activeTiles)
 
 	# Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
 	n_uprns_undersameroof, uprns_undersameroof = multidwellplans(project.dat["master"][:,[:UPRN,:osgb]])
-	n_uprns_undersameroof = project.dat["master"][!,:nUPRNs_undersameroof]
-	uprns_undersameroof = project.dat["master"][!,:UPRNs_undersameroof]
+	project.dat["master"][!,:nUPRNs_undersameroof] = n_uprns_undersameroof
+	project.dat["master"][!,:UPRNs_undersameroof] = uprns_undersameroof
 
 	# Send compiled stock data to JSON (by tile)
     function WriteStockJSON(project,tile)

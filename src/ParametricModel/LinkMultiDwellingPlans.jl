@@ -15,6 +15,3 @@ function multidwellplans(stockdata)
     uprns_undersameroof[i_flats] .= unique_id
     return n_uprns_undersameroof, uprns_undersameroof
 end
-
-
-@time Not(i_flats)
