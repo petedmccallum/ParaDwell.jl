@@ -96,10 +96,16 @@ function LoadStockData(env,project)
 	# Restore existing JSONs (if any JSON are found)
 	stockData = []
 	if !isempty(iKeep)
-		push!(stockData,vcat(readJSON.("BuildingStock",activeTiles[iKeep])...))
+		# Try/catch rejects the saved JSONs when multiple tiles are used AND the
+		# ... DataFrame columns don't match. Rebuild carried out at next step
+		try
+			push!(stockData,vcat(readJSON.("BuildingStock",activeTiles[iKeep])...))
+		catch
+			iKeep = []
+		end
 	end
 
-	# Evaluate new stock data, where existing JSONs are not found
+	# Evaluate new stock data, where existing JSONs are not found/don't match
 	if length(iKeep)!=length(activeTiles)
 		project = LinkHaData(env,project,activeTiles[Not(iKeep)])
 		push!(stockData,project.dat["master"])
@@ -124,7 +130,7 @@ function LinkHaData(env,project,activeTiles)
 	# Link HA data
 	DataSource = "HA"
 	selected_cols = [:UPRN,:Easting,:Northing,:Full_postal_address,
-		:Building_block_ID,:Data_zone_code,:Data_zone,]
+		:Building_block_ID,:Data_zone_code,:Data_zone,:Property_type,]
 	project = ExtractData(project,DataSource,activeTiles,selected_cols)
 
 	# Create new master dataframe from HA data
@@ -152,7 +158,9 @@ function LinkHaData(env,project,activeTiles)
 	project = ProcessGeom(project)
 
 	# Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
-	project.dat["master"][!,:UPRNs_undersameroof] = multidwellplans(project.dat["master"][:,[:UPRN,:osgb]])
+	n_uprns_undersameroof, uprns_undersameroof = multidwellplans(project.dat["master"][:,[:UPRN,:osgb]])
+	n_uprns_undersameroof = project.dat["master"][!,:nUPRNs_undersameroof]
+	uprns_undersameroof = project.dat["master"][!,:UPRNs_undersameroof]
 
 	# Send compiled stock data to JSON (by tile)
     function WriteStockJSON(project,tile)
