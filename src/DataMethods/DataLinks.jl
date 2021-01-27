@@ -101,7 +101,9 @@ function LoadStockData(env,project)
 	end
 
 	# List active tiles
-	activeTiles = [tile.tile for tile in project.dat["gml"]]
+	activetiles(tile) = tile.tile
+	activeTiles = activetiles.(project.dat["gml"])
+
 
 	# List saved stock JSONs
 	BuildingStockDir = readdir(joinpath(env.paths[:projects],"BuildingStock"))
@@ -189,6 +191,9 @@ function LinkHaData(env,project,activeTiles)
 	project.dat["master"].OS_areas_eval[i_linked] = shoelacearea_closedpoly.(
 		project.dat["master"].eastings_GML[i_linked],
 		project.dat["master"].northings_GML[i_linked])
+
+	# Integrate Ordnance Survey 'Building Height Attribute' data
+	project = linkbuildingheights(env,project,activeTiles)
 
 	# Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
 	n_uprns_undersameroof, uprns_undersameroof = multidwellplans(project.dat["master"][:,[:UPRN,:osgb,:iGml]])
