@@ -39,4 +39,4 @@ project = SelectTile(env,project,ui,"HY41SE")
 
 @time project = buildarchetypes(project)
 
-exportstockdata(project)
+# exportstockdata(project)

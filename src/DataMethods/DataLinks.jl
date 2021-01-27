@@ -182,6 +182,14 @@ function LinkHaData(env,project,activeTiles)
 	# Remove redunant vertices and scan for adjacencies
 	project = ProcessGeom(project)
 
+	# Eval polygon areas
+	i_linked = findall(isempty.(project.dat["master"].eastings_GML).==false)
+	shoelacearea_closedpoly(x,y) = shoelacearea(x[1:end-1],y[1:end-1])
+	project.dat["master"][!,:OS_areas_eval] = fill!(Array{Union{Missing,Float32}}(undef,nrow(project.dat["master"])),missing)
+	project.dat["master"].OS_areas_eval[i_linked] = shoelacearea_closedpoly.(
+		project.dat["master"].eastings_GML[i_linked],
+		project.dat["master"].northings_GML[i_linked])
+
 	# Find plans that have more than one UPRN under same roof, generate unique string of all UPRNs
 	n_uprns_undersameroof, uprns_undersameroof = multidwellplans(project.dat["master"][:,[:UPRN,:osgb,:iGml]])
 	project.dat["master"][!,:nUPRNs_undersameroof] = n_uprns_undersameroof
