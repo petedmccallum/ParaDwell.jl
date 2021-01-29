@@ -9,4 +9,8 @@ function readJSON(directory,tileRef)
     close(io)
     data_dict = JSON.parse(content[1])
     data = DataFrame(data_dict)
+    # As 'Missing's come back as 'Nothing's from JSON, this is corrected below
+    prep_df(data,col) = data[findall(isnothing.(data[:,col])),col] .= missing
+    prep_df.((data,),collect(1:ncol(data)))
+    return data
 end

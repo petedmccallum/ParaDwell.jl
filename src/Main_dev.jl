@@ -27,6 +27,7 @@ include("DataMethods/GeoRef.jl")
 include("ParametricModel/ProcessGeom.jl")
 include("ParametricModel/LinkMultiDwellingPlans.jl")
 include("ParametricModel/ParametricModel.jl")
+include("ParametricModel/ExtrapolateEpc.jl")
 
 ui = LaunchMainUI(env);
 include("UI/ClickTile.jl")
@@ -40,5 +41,7 @@ project = SelectTile(env,project,ui,"HY41SE")
 @time project = LoadStockData(env,project)
 
 @time project = buildarchetypes(project)
+
+@time fillblockconfig.((project.dat["master"],),2:4)
 
 # exportstockdata(project)

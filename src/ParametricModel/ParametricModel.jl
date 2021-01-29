@@ -17,7 +17,7 @@ function buildarchetypes(project)
     stockdata[!,:tol] = fill!(Array{Union{Missing,Float64}}(undef,L),missing)
     stockdata[!,:tor] = fill!(Array{Union{Missing,Float64}}(undef,L),missing)
     stockdata[!,:tp] = fill!(Array{Union{Missing,Float64}}(undef,L),missing)
-    stockdata[!,:bc] = fill!(Array{Union{Missing,String}}(undef,L),missing)
+    stockdata[!,:bc1] = fill!(Array{Union{Missing,String}}(undef,L),missing)
 
     stockdata = assess4vertplans(stockdata,ishapes["4vert"])
     return project
@@ -55,21 +55,21 @@ function assess4vertplans(stockdata,ishape)
         i_all = findall(adiab_array)
         adjacencies = missing
         if isempty(i_all)
-            adjacencies = "EEEE??"
+            adjacencies = "EEEE"
         elseif length(i_all) == 1
-            adjacencies = "EEEA??"
+            adjacencies = "EEEA"
         elseif length(i_all) == 2
             if diff(i_all) == [2]
-                adjacencies = "EEAA??"
+                adjacencies = "EEAA"
             else
-                adjacencies = "EAEA??"
+                adjacencies = "EAEA"
             end
         elseif length(i_all) == 3
-            adjacencies = "EAAA??"
+            adjacencies = "EAAA"
         end
         return adjacencies
     end
-    stockdata.bc[ishape] = findadjacencies.(stockdata.adiabBool[ishape])
+    stockdata.bc1[ishape] = findadjacencies.(stockdata.adiabBool[ishape])
 
     return stockdata
 end

@@ -187,10 +187,11 @@ function LinkHaData(env,project,activeTiles)
 	# Eval polygon areas
 	i_linked = findall(isempty.(project.dat["master"].eastings_GML).==false)
 	shoelacearea_closedpoly(x,y) = shoelacearea(x[1:end-1],y[1:end-1])
-	project.dat["master"][!,:OS_areas_eval] = fill!(Array{Union{Missing,Float32}}(undef,nrow(project.dat["master"])),missing)
-	project.dat["master"].OS_areas_eval[i_linked] = shoelacearea_closedpoly.(
+	project.dat["master"][!,:OS_area_eval] = fill!(Array{Union{Missing,Float32}}(undef,nrow(project.dat["master"])),missing)
+	project.dat["master"].OS_area_eval[i_linked] = shoelacearea_closedpoly.(
 		project.dat["master"].eastings_GML[i_linked],
-		project.dat["master"].northings_GML[i_linked])
+		project.dat["master"].northings_GML[i_linked]
+    )
 
 	# Integrate Ordnance Survey 'Building Height Attribute' data
 	project = linkbuildingheights(env,project,activeTiles)

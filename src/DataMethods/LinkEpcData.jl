@@ -48,5 +48,10 @@ function link_epcdata(env,project,activeTiles)
     # Combine master and EPC data
     project.dat["master"] = hcat(project.dat["master"],newcols)
 
+    # Area ratio, between EPC data and OS-evaluated. 1.0 assumed where EPC missing
+    arearatio = project.dat["master"].EPC_Total_floor_area_m2_./project.dat["master"].OS_area_eval
+    project.dat["master"][!,:arearatio] = ones(nrow(project.dat["master"]))
+    project.dat["master"].arearatio[ismissing.(arearatio).==false] = arearatio[ismissing.(arearatio).==false]
+
     return project
 end
