@@ -93,3 +93,31 @@ function abovebelowadj(stockdata)
     stockdata.bc2[intersect(i_1to4UPRN,j[4])] .= "AG"
     return stockdata
 end
+
+function gen_archcode(stockdata,tol_geom)
+    # Find intersecting non-missing rows (all data present in geom cols)
+    ismissing_col(data,col) = findall(ismissing.(data[:,col]).==false)
+    i_nonmisisngs = intersect(vcat(
+        intersect(ismissing_col.((stockdata,),[:width,:depth,:tol,:tor,:tp]))...),
+        intersect(vcat(ismissing_col.((stockdata,),[:RelH2,:RelHMax]))
+    ...))
+    stockdata_exrp = deepcopy(stockdata[i_nonmisisngs,:])
+
+    # Apply archetyping geometry tolerence (arg, in metres)
+    apply_geomtol(arr,tol,factor) = lpad(string(Int(factor*round(arr./tol).*tol)),3,"0")
+    w = apply_geomtol.(stockdata_exrp.width,tol_geom,10)
+    d = apply_geomtol.(stockdata_exrp.depth,tol_geom,10)
+    tol = apply_geomtol.(stockdata_exrp.tol,tol_geom,10)
+    tor = apply_geomtol.(stockdata_exrp.tor,tol_geom,10)
+    tp = apply_geomtol.(stockdata_exrp.tp,tol_geom,10)
+    he = apply_geomtol.(stockdata_exrp.RelH2,tol_geom/2,100)
+    ha = apply_geomtol.(stockdata_exrp.RelHMax,tol_geom/2,100)
+
+    # Compile archetypes
+    compilearchetype(w,d,tol,tor,tp,he,ha,bc1,bc2) =
+        "w$w-d$d-tol$tol-tor$tor-tp$tp-he$he-ha$ha-adj$bc1$bc2"
+    archcode = compilearchetype.(w,d,tol,tor,tp,he,ha,
+        stockdata_exrp.bc1,stockdata_exrp.bc2)
+
+    return archcode
+end

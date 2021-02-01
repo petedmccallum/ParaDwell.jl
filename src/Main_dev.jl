@@ -46,5 +46,6 @@ project = SelectTile(env,project,ui,"HY41SE")
 
 @time abovebelowadj(stockdata)
 
+@time gen_archcode(stockdata,1.)
 
 exportstockdata(project)
