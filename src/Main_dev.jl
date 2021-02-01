@@ -44,4 +44,7 @@ project = SelectTile(env,project,ui,"HY41SE")
 
 @time fillblockconfig.((project.dat["master"],),2:4)
 
-# exportstockdata(project)
+@time abovebelowadj(stockdata)
+
+
+exportstockdata(project)

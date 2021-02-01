@@ -73,3 +73,23 @@ function assess4vertplans(stockdata,ishape)
 
     return stockdata
 end
+
+function abovebelowadj(stockdata)
+    # Prep array
+    stockdata[!,:bc2] = fill!(Array{Union{Missing,String}}(undef,nrow(stockdata)),missing)
+    # Apply External (E) roof and Ground (G) adjacencies to all single-UPRN footprints
+    # ... THIS OVERLOOKS FLATS ABOVE NON-RES,BUT THESE ARE PICKED UP BELOW
+    stockdata.bc2[stockdata.nUPRNs_undersameroof.==1] .= "EG"
+
+
+    findall_arr(val,arr) = findall(arr.==val)
+    i_1to4UPRN = vcat(findall_arr.((stockdata.nUPRNs_undersameroof,),1:4)...)
+    i_nonmissing = findall(ismissing.(stockdata.EPC_Dwelling_Type).==false)
+    findoccursin_arr(val,arr) = i_nonmissing[findall(occursin.(val,arr))]
+    j = findoccursin_arr.(("ground-floor ","mid-floor ","top-floor ","basement "),(lowercase.(stockdata.EPC_Dwelling_Type[i_nonmissing]),))
+    stockdata.bc2[intersect(i_1to4UPRN,j[1])] .= "AG"
+    stockdata.bc2[intersect(i_1to4UPRN,j[2])] .= "AA"
+    stockdata.bc2[intersect(i_1to4UPRN,j[3])] .= "EA"
+    stockdata.bc2[intersect(i_1to4UPRN,j[4])] .= "AG"
+    return stockdata
+end
